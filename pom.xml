@@ -56,7 +56,7 @@
         <maven-gpg-plugin.version>1.5</maven-gpg-plugin.version>
         <kotlin.version>1.2.21</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
-        <spek.version>1.1.4</spek.version>
+        <spek.version>[1.1.5]</spek.version>
         <xenocom.version>0.0.5</xenocom.version>
         <argparser.version>2.0.4</argparser.version>
         <klaxon.version>0.30</klaxon.version>
@@ -64,11 +64,11 @@
         <surfire.version>2.19.1</surfire.version>
         <progressindicator.version>1.0.0</progressindicator.version>
         <conllio.version>0.1.0</conllio.version>
-        <simplednn.version>[0.8.0]</simplednn.version>
+        <simplednn.version>[0.9.0]</simplednn.version>
         <dependencytree.version>0.3.0</dependencytree.version>
         <neuralparser.version>0.2.8</neuralparser.version>
         <linguisticdescription.version>0.8.0</linguisticdescription.version>
-        <tokensencoder.version>0.1.0</tokensencoder.version>
+        <tokensencoder.version>[0.1.0]</tokensencoder.version>
     </properties>
 
     <repositories>
