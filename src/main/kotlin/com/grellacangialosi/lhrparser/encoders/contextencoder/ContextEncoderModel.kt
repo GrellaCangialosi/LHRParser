@@ -21,6 +21,7 @@ import java.io.Serializable
  * @property hiddenActivation the activation function of the hidden layer
  * @property connectionType type of recurrent neural network (e.g. LSTM, GRU, CFN, SimpleRNN)
  * @property numberOfLayers number of stacked BiRNNs (default 1)
+ * @param dropout the probability of the recurrent dropout (default 0.0)
  * @param weightsInitializer the initializer of the weights (zeros if null, default: Glorot)
  * @param biasesInitializer the initializer of the biases (zeros if null, default: Glorot)
  */
@@ -29,6 +30,7 @@ class ContextEncoderModel(
   val connectionType: LayerType.Connection,
   val hiddenActivation: ActivationFunction?,
   val numberOfLayers: Int = 1,
+  dropout: Double,
   weightsInitializer: Initializer? = GlorotInitializer(),
   biasesInitializer: Initializer? = null
 ) : Serializable {
@@ -48,6 +50,7 @@ class ContextEncoderModel(
   val biRNN = DeepBiRNN(
     inputType = LayerType.Input.Dense,
     inputSize = this.tokenEncodingSize,
+    dropout = dropout,
     recurrentConnectionType = this.connectionType,
     hiddenActivation = this.hiddenActivation,
     numberOfLayers = this.numberOfLayers,

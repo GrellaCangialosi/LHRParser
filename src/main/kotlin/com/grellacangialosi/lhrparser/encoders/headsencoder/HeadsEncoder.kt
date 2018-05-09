@@ -36,7 +36,7 @@ class HeadsEncoder(private val model: HeadsEncoderModel) {
    * @return the latent heads representation
    */
   fun encode(tokensVectors: Array<DenseNDArray>): Array<DenseNDArray> =
-    this.outputEncoder.encode(this.encoder.encode(tokensVectors))
+    this.outputEncoder.encode(this.encoder.encode(tokensVectors, useDropout = true))
 
   /**
    * @param errors the errors of the current encoding

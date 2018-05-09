@@ -28,7 +28,7 @@ class ContextEncoder(private val model: ContextEncoderModel) {
    * @return the context vectors of the tokens
    */
   fun encode(tokensEncodings: Array<DenseNDArray>): Array<DenseNDArray> =
-    this.encoder.encode(sequence = tokensEncodings)
+    this.encoder.encode(sequence = tokensEncodings, useDropout = true)
 
   /**
    * @param errors the errors of the current encoding

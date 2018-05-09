@@ -21,13 +21,15 @@ import java.io.Serializable
  * @property tokenEncodingSize the size of the token encoding vectors
  * @property connectionType the recurrent connection type of the BiRNN used to encode tokens
  * @property hiddenActivation the hidden activation function of the BiRNN used to encode tokens
+ * @param recurrentDropout the probability of the recurrent dropout (default 0.0)
  * @param weightsInitializer the initializer of the weights (zeros if null, default: Glorot)
- * @param biasesInitializer the initializer of the biases (zeros if null, default: Glorot)
+ * @param biasesInitializer the initializer of the biases (zeros if null, default: null)
  */
 class HeadsEncoderModel(
   val tokenEncodingSize: Int,
   val connectionType: LayerType.Connection,
   val hiddenActivation: ActivationFunction?,
+  recurrentDropout: Double = 0.0,
   weightsInitializer: Initializer? = GlorotInitializer(),
   biasesInitializer: Initializer? = null
 ) : Serializable {
@@ -47,6 +49,7 @@ class HeadsEncoderModel(
   val biRNN = BiRNN(
     inputType = LayerType.Input.Dense,
     inputSize = this.tokenEncodingSize,
+    dropout = recurrentDropout,
     recurrentConnectionType = this.connectionType,
     hiddenActivation = this.hiddenActivation,
     hiddenSize = this.tokenEncodingSize,
