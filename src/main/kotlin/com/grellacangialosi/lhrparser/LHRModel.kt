@@ -71,6 +71,7 @@ class LHRModel(
     connectionType = this.contextBiRNNConfig.connectionType,
     hiddenActivation = this.contextBiRNNConfig.hiddenActivation,
     numberOfLayers = this.contextBiRNNConfig.numberOfLayers,
+    dropout = 0.0,
     biasesInitializer = null)
 
   /**
@@ -84,7 +85,8 @@ class LHRModel(
   val headsEncoderModel = HeadsEncoderModel(
     tokenEncodingSize = this.contextVectorsSize,
     connectionType = this.headsBiRNNConfig.connectionType,
-    hiddenActivation = this.headsBiRNNConfig.hiddenActivation)
+    hiddenActivation = this.headsBiRNNConfig.hiddenActivation,
+    recurrentDropout = 0.0)
 
   /**
    * The embeddings vector that represents the root token of a sentence.
