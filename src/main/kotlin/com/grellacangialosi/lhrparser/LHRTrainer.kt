@@ -8,6 +8,7 @@
 package com.grellacangialosi.lhrparser
 
 import com.grellacangialosi.lhrparser.decoders.HeadsDecoder
+import com.grellacangialosi.lhrparser.decoders.HeadsPointer
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoder
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderBuilder
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderOptimizer
@@ -27,6 +28,8 @@ import com.kotlinnlp.neuralparser.language.Sentence
 import com.kotlinnlp.simplednn.core.functionalities.losses.MSECalculator
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.adam.ADAMMethod
+import com.kotlinnlp.simplednn.core.optimizer.ParamsOptimizer
+import com.kotlinnlp.simplednn.deeplearning.pointernetwork.PointerNetworkParameters
 import com.kotlinnlp.simplednn.simplemath.assignSum
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 import com.kotlinnlp.simplednn.utils.scheduling.BatchScheduling
@@ -133,13 +136,28 @@ class LHRTrainer(
     model = this.parser.model.tokensEncoderModel, updateMethod = this.updateMethod)
 
   /**
+   * The heads pointer network.
+   * TODO: fix usage
+   */
+  private val headsPointer = HeadsPointer(this.parser.model.pointerNetworkModel)
+
+  /**
+   * The heads pointer optimizer.
+   * TODO: fix usage
+   */
+  private val headsPointerOptimizer = ParamsOptimizer(
+    params = this.parser.model.pointerNetworkModel.params,
+    updateMethod = updateMethod)
+
+  /**
    * Group the optimizers all together.
    */
   private val optimizers = listOf(
     this.headsEncoderOptimizer,
     this.contextEncoderOptimizer,
     this.deprelAndPOSLabelerOptimizer,
-    this.tokensEncoderOptimizer)
+    this.tokensEncoderOptimizer,
+    this.headsPointerOptimizer)
 
   /**
    * @return a string representation of the configuration of this Trainer
@@ -260,6 +278,10 @@ class LHRTrainer(
         tokensHeads = goldTree.heads,
         tokensVectors = lss.contextVectors)
 
+      // TODO: fix usage
+      this.headsPointer.learn(lss.contextVectors.toTypedArray(), goldHeads = goldTree.heads)
+      this.headsPointerOptimizer.accumulate(this.headsPointer.getParamsErrors(copy = false))
+
       this.propagateErrors(
         errors = errors,
         goldTree = goldTree,
@@ -341,6 +363,7 @@ class LHRTrainer(
     encoder: LSSEncoder,
     labeler: DeprelAndPOSLabeler?){
 
+
     val contextErrors = encoder.headsEncoder.propagateErrors(errors)
 
     labeler?.propagateErrors(
@@ -353,6 +376,9 @@ class LHRTrainer(
 
       this.propagateRootErrors(rootErrors)
     }
+
+    // TODO: fix usage
+    contextErrors.assignSum(this.headsPointer.getInputErrors())
 
     encoder.tokensEncoder.propagateErrors(encoder.contextEncoder.propagateErrors(contextErrors))
   }
