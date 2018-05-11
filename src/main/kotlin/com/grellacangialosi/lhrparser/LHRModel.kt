@@ -17,9 +17,7 @@ import com.kotlinnlp.simplednn.embeddings.Embedding
 import com.kotlinnlp.simplednn.simplemath.ndarray.Shape
 import com.kotlinnlp.neuralparser.NeuralParserModel
 import com.kotlinnlp.neuralparser.language.CorpusDictionary
-import com.kotlinnlp.simplednn.core.functionalities.activations.Tanh
-import com.kotlinnlp.simplednn.core.layers.LayerType
-import com.kotlinnlp.simplednn.deeplearning.pointernetwork.PointerNetworkModel
+import com.kotlinnlp.simplednn.attention.pointernetwork.PointerNetworkModel
 import com.kotlinnlp.simplednn.encoders.birnn.BiRNNConfig
 import com.kotlinnlp.simplednn.utils.Serializer
 import com.kotlinnlp.tokensencoder.TokensEncoderModel
@@ -112,12 +110,11 @@ class LHRModel(
 
   /**
    * The model of the pointer network.
-   * TODO: fix usage
    */
   val pointerNetworkModel = PointerNetworkModel(
     inputSize = this.contextVectorsSize,
-    attentionSize = this.contextVectorsSize,
-    decodingInputSize = this.contextVectorsSize)
+    vectorSize = this.contextVectorsSize,
+    attentionSize = 50) // TODO: fix this
 
   /**
    * Initialize the root embedding.
