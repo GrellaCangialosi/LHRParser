@@ -21,6 +21,7 @@ import com.grellacangialosi.lhrparser.utils.ArcScores.Companion.rootId
 import com.grellacangialosi.lhrparser.utils.CyclesFixer
 import com.kotlinnlp.neuralparser.NeuralParser
 import com.kotlinnlp.neuralparser.language.Sentence
+import com.kotlinnlp.simplednn.attention.pointernetwork.PointerNetwork
 import com.kotlinnlp.tokensencoder.TokensEncoderFactory
 
 /**
@@ -61,6 +62,11 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
   }
 
   /**
+   * The pointer network
+   */
+  private val pointerNetwork = PointerNetwork(this.model.pointerNetworkModel) // TODO: to check
+
+  /**
    * Parse a sentence, returning its dependency tree.
    * The dependency tree is obtained by decoding a latent syntactic structure.
    * If the labeler is available, the dependency tree can contains deprel and posTag annotations.
@@ -73,7 +79,9 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
 
     val encoder: LSSEncoder = this.buildEncoder()
     val lss = encoder.encode(sentence.tokens)
-    val scores: ArcScores = HeadsDecoder(lss).arcScores
+
+    val scores: ArcScores = HeadsDecoder().decode(lss)
+    //val scores2: ArcScores = HeadsPointer(this.pointerNetwork).decode(lss) // TODO: to try
 
     return this.buildDependencyTree(lss, scores)
   }
