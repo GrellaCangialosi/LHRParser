@@ -16,15 +16,8 @@ import com.kotlinnlp.simplednn.simplemath.similarity
 
 /**
  * The HeadsDecoder.
- *
- * @param lss the latent syntactic structure to decode
  */
-class HeadsDecoder(private val lss: LatentSyntacticStructure) {
-
-  /**
-   * The computed [ArcScores].
-   */
-  val arcScores: ArcScores get() = ArcScores(scores = this._scores)
+class HeadsDecoder {
 
   /**
    * The private map of scored arcs.
@@ -38,30 +31,36 @@ class HeadsDecoder(private val lss: LatentSyntacticStructure) {
    *
    * The root vector must be normalized each time because it is being trained.
    */
-  private val lssNorm = LatentSyntacticStructure(
-    tokens = this.lss.tokens,
-    contextVectors = this.lss.contextVectors.map { it.normalize() },
-    latentHeads = this.lss.latentHeads.map { it.normalize() },
-    virtualRoot = this.lss.virtualRoot.normalize()
-  )
+  private lateinit var lssNorm: LatentSyntacticStructure
 
   /**
-   * Calculate the similarity scores among the context-vectors, the latent-heads and the root-vector, and save them
-   * into the scores map.
+   * Calculate the similarity scores among the context-vectors, the latent-heads and the root-vector.
+   *
+   * @param lss the latent syntactic structure to decode
+   *
+   * @return the computed scores
    */
-  init {
+  fun decode(lss: LatentSyntacticStructure): ArcScores {
 
-    this.lss.tokens.forEach {
+   this.lssNorm = LatentSyntacticStructure(
+      tokens = lss.tokens,
+      contextVectors = lss.contextVectors.map { it.normalize() },
+      latentHeads = lss.latentHeads.map { it.normalize() },
+      virtualRoot = lss.virtualRoot.normalize())
+
+    lss.tokens.forEach {
 
       this._scores[it.id] = mutableMapOf()
 
       this.setHeadsScores(it)
       this.setRootScores(it)
     }
+
+    return ArcScores(scores = this._scores)
   }
 
   /**
-   * Set the heads scores of the given [dependent] in the scores map.
+   * Set the heads scores of the given [dependent] in the [_scores] map.
    *
    * @param dependent the the dependent token
    */
@@ -69,7 +68,7 @@ class HeadsDecoder(private val lss: LatentSyntacticStructure) {
 
     val scores: MutableMap<Int, Double> = this._scores.getValue(dependent.id)
 
-    this.lss.tokens
+    this.lssNorm.tokens
       .filterNot { it.id == dependent.id || it.isPunctuation }
       .associateTo(scores) { it.id to similarity(
         a = this.lssNorm.contextVectors[it.id],
@@ -77,7 +76,7 @@ class HeadsDecoder(private val lss: LatentSyntacticStructure) {
   }
 
   /**
-   * Set the root score of the given [dependent] in the [arcScores] map.
+   * Set the root score of the given [dependent] in the [_scores] map.
    *
    * @param dependent the the dependent token
    */
