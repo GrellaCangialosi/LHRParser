@@ -23,4 +23,10 @@ data class LatentSyntacticStructure(
   val contextVectors: List<DenseNDArray>,
   val latentHeads: List<DenseNDArray>,
   val virtualRoot: DenseNDArray
-)
+) {
+
+  /**
+   * The length of the sentence.
+   */
+  val size: Int = this.tokens.size
+}
