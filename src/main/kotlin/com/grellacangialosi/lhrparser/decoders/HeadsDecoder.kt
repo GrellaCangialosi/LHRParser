@@ -17,7 +17,7 @@ import com.kotlinnlp.simplednn.simplemath.similarity
 /**
  * The HeadsDecoder.
  */
-class HeadsDecoder {
+class HeadsDecoder : LSSDecoder {
 
   /**
    * The private map of scored arcs.
@@ -40,7 +40,7 @@ class HeadsDecoder {
    *
    * @return the computed scores
    */
-  fun decode(lss: LatentSyntacticStructure): ArcScores {
+  override fun decode(lss: LatentSyntacticStructure): ArcScores {
 
    this.lssNorm = LatentSyntacticStructure(
       tokens = lss.tokens,

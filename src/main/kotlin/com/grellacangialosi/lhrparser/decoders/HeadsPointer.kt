@@ -20,9 +20,7 @@ import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
  *
  * @param network the pointer network
  */
-class HeadsPointer(
-  private val network: PointerNetwork
-) {
+class HeadsPointer(private val network: PointerNetwork) : LSSDecoder {
 
   /**
    * Calculate the arc-scores.
@@ -31,7 +29,7 @@ class HeadsPointer(
    *
    * @return the computed scores
    */
-  fun decode(lss: LatentSyntacticStructure): ArcScores {
+  override fun decode(lss: LatentSyntacticStructure): ArcScores {
 
     val scores = mutableMapOf<Int, MutableMap<Int, Double>>()
 
