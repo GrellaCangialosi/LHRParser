@@ -277,10 +277,10 @@ class LHRTrainer(
         tokensHeads = goldTree.heads,
         tokensVectors = lss.contextVectors)
 
-      val headsPointer = HeadsPointer(this.pointerNetwork)
+      val headsPointer: HeadsPointer? = HeadsPointer(this.pointerNetwork) // TODO: fix
 
       // TODO: to refactor
-      headsPointer.let {
+      headsPointer?.let {
         it.learn(lss, goldTree.heads)
         this.headsPointerOptimizer.accumulate(it.getParamsErrors(copy = false))
       }
@@ -366,14 +366,18 @@ class LHRTrainer(
     goldTree: DependencyTree,
     goldPosTags: Array<POSTag?>?,
     encoder: LSSEncoder,
-    headsPointer: HeadsPointer,
+    headsPointer: HeadsPointer?,
     labeler: DeprelAndPOSLabeler?){
 
-    // errors.assignSum(headsPointer.getLatentHeadsErrors()) // // TODO: to refactor
+    headsPointer?.let {
+      errors.assignSum(headsPointer.getLatentHeadsErrors()) // // TODO: to refactor
+    }
 
     val contextErrors = encoder.headsEncoder.propagateErrors(errors)
 
-    contextErrors.assignSum(headsPointer.getContextVectorsErrors()) // TODO: to refactor
+    headsPointer?.let {
+      contextErrors.assignSum(headsPointer.getContextVectorsErrors()) // TODO: to refactor
+    }
 
     labeler?.propagateErrors(
       goldTree = goldTree,
