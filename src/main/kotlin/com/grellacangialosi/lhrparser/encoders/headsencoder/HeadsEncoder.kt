@@ -7,9 +7,9 @@
 
 package com.grellacangialosi.lhrparser.encoders.headsencoder
 
-import com.kotlinnlp.simplednn.encoders.sequenceencoder.SequenceFeedforwardEncoder
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 import com.kotlinnlp.neuralparser.language.Token
+import com.kotlinnlp.simplednn.core.neuralprocessor.batchfeedforward.BatchFeedforwardProcessor
 import com.kotlinnlp.simplednn.encoders.birnn.BiRNNEncoder
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 
@@ -28,7 +28,7 @@ class HeadsEncoder(private val model: HeadsEncoderModel) {
   /**
    * The Feedforward Encoder that reduces the size of the output of the [encoder].
    */
-  private val outputEncoder = SequenceFeedforwardEncoder<DenseNDArray>(this.model.outputNetwork)
+  private val outputEncoder = BatchFeedforwardProcessor<DenseNDArray>(this.model.outputNetwork)
 
   /**
    * @param tokensVectors the vectors that represent each token
@@ -36,7 +36,7 @@ class HeadsEncoder(private val model: HeadsEncoderModel) {
    * @return the latent heads representation
    */
   fun encode(tokensVectors: Array<DenseNDArray>): Array<DenseNDArray> =
-    this.outputEncoder.encode(this.encoder.encode(tokensVectors, useDropout = true))
+    this.outputEncoder.forward(this.encoder.encode(tokensVectors, useDropout = true))
 
   /**
    * @param errors the errors of the current encoding
@@ -44,7 +44,7 @@ class HeadsEncoder(private val model: HeadsEncoderModel) {
   fun backward(errors: Array<DenseNDArray>) {
 
     this.outputEncoder.backward(errors, propagateToInput = true)
-    return this.encoder.backward(this.outputEncoder.getInputSequenceErrors(copy = false), propagateToInput = true)
+    return this.encoder.backward(this.outputEncoder.getBatchInputErrors(copy = false), propagateToInput = true)
   }
 
   /**

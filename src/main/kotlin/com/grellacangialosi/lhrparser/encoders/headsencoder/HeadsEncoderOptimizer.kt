@@ -34,7 +34,7 @@ class HeadsEncoderOptimizer(
    * The Optimizer of the outputEncoder parameters.
    */
   private val outputEncoderOptimizer: ParamsOptimizer<NetworkParameters> =
-    ParamsOptimizer(params = this.model.outputNetwork.network.model, updateMethod = this.updateMethod)
+    ParamsOptimizer(params = this.model.outputNetwork.model, updateMethod = this.updateMethod)
 
   /**
    * Update the parameters of the neural element associated to this optimizer.
