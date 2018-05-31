@@ -173,11 +173,11 @@ class TrainingArgs(args: Array<String>) {
   )
 
   /**
-   * Whether to use the labeler.
+   * Whether to do not use the labeler.
    */
-  val useLabeler: Boolean by parser.flagging(
-    "--labeler",
-    help="whether to use the labeler"
+  val noLabeler: Boolean by parser.flagging(
+    "--no-labeler",
+    help="whether to do not use the labeler"
   )
 
   /**

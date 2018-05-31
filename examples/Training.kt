@@ -130,7 +130,7 @@ fun buildParser(parsedArgs: TrainingArgs,
   headsBiRNNConfig = BiRNNConfig(
     connectionType = LayerType.Connection.LSTM,
     hiddenActivation = Tanh()),
-  useLabeler = parsedArgs.useLabeler,
+  useLabeler = !parsedArgs.noLabeler,
   labelerTrainingMode = LabelerTrainingMode.HingeLoss,
   predictPosTags = !parsedArgs.noPosPrediction))
 
