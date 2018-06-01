@@ -7,7 +7,7 @@
 
 package com.grellacangialosi.lhrparser.encoders.contextencoder
 
-import com.kotlinnlp.simplednn.encoders.birnn.deepbirnn.DeepBiRNNParameters
+import com.kotlinnlp.simplednn.deeplearning.birnn.deepbirnn.DeepBiRNNParameters
 
 /**
  * @property biRNNParameters the params of the [ContextEncoder]

@@ -13,12 +13,12 @@ import com.grellacangialosi.lhrparser.labeler.DeprelAndPOSLabelerModel
 import com.grellacangialosi.lhrparser.labeler.LabelerTrainingMode
 import com.kotlinnlp.simplednn.core.arrays.UpdatableDenseArray
 import com.kotlinnlp.simplednn.core.functionalities.initializers.GlorotInitializer
-import com.kotlinnlp.simplednn.embeddings.Embedding
+import com.kotlinnlp.simplednn.core.embeddings.Embedding
 import com.kotlinnlp.simplednn.simplemath.ndarray.Shape
 import com.kotlinnlp.neuralparser.NeuralParserModel
 import com.kotlinnlp.neuralparser.language.CorpusDictionary
-import com.kotlinnlp.simplednn.attention.pointernetwork.PointerNetworkModel
-import com.kotlinnlp.simplednn.encoders.birnn.BiRNNConfig
+import com.kotlinnlp.simplednn.deeplearning.attention.pointernetwork.PointerNetworkModel
+import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNConfig
 import com.kotlinnlp.simplednn.utils.Serializer
 import com.kotlinnlp.tokensencoder.TokensEncoderModel
 import java.io.InputStream

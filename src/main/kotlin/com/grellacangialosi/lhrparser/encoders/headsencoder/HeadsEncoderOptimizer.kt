@@ -11,7 +11,7 @@ import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
 import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
 import com.kotlinnlp.simplednn.core.optimizer.Optimizer
 import com.kotlinnlp.simplednn.core.optimizer.ParamsOptimizer
-import com.kotlinnlp.simplednn.encoders.birnn.BiRNNParameters
+import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNParameters
 
 /**
  * @param updateMethod the update method helper (Learning Rate, ADAM, AdaGrad, ...)

@@ -8,7 +8,7 @@
 package com.grellacangialosi.lhrparser.encoders.contextencoder
 
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
-import com.kotlinnlp.simplednn.encoders.birnn.deepbirnn.DeepBiRNNEncoder
+import com.kotlinnlp.simplednn.deeplearning.birnn.deepbirnn.DeepBiRNNEncoder
 
 /**
  * Encoder that represents the tokens in their sentential context.

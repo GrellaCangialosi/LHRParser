@@ -10,7 +10,7 @@ package com.grellacangialosi.lhrparser.encoders.contextencoder
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
 import com.kotlinnlp.simplednn.core.optimizer.Optimizer
 import com.kotlinnlp.simplednn.core.optimizer.ParamsOptimizer
-import com.kotlinnlp.simplednn.encoders.birnn.deepbirnn.DeepBiRNNParameters
+import com.kotlinnlp.simplednn.deeplearning.birnn.deepbirnn.DeepBiRNNParameters
 
 /**
  * @param updateMethod the update method helper (Learning Rate, ADAM, AdaGrad, ...)

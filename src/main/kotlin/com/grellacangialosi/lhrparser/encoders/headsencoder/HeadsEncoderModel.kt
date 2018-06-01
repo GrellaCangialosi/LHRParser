@@ -13,7 +13,7 @@ import com.kotlinnlp.simplednn.core.functionalities.initializers.Initializer
 import com.kotlinnlp.simplednn.core.layers.LayerConfiguration
 import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.simplednn.core.neuralnetwork.NeuralNetwork
-import com.kotlinnlp.simplednn.encoders.birnn.BiRNN
+import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNN
 import java.io.Serializable
 
 /**

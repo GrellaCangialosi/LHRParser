@@ -11,16 +11,16 @@ import com.grellacangialosi.lhrparser.LatentSyntacticStructure
 import com.grellacangialosi.lhrparser.utils.ArcScores
 import com.grellacangialosi.lhrparser.utils.ArcScores.Companion.rootId
 import com.kotlinnlp.simplednn.core.functionalities.losses.SoftmaxCrossEntropyCalculator
-import com.kotlinnlp.simplednn.attention.pointernetwork.PointerNetwork
+import com.kotlinnlp.simplednn.deeplearning.attention.pointernetwork.PointerNetworkProcessor
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 
 /**
  * The HeadsPointer decoder.
  *
- * @param network the pointer network
+ * @param networkProcessor the pointer network
  */
-class HeadsPointer(private val network: PointerNetwork) : LSSDecoder {
+class HeadsPointer(private val networkProcessor: PointerNetworkProcessor) : LSSDecoder {
 
   /**
    * Calculate the arc-scores.
@@ -33,11 +33,11 @@ class HeadsPointer(private val network: PointerNetwork) : LSSDecoder {
 
     val scores = mutableMapOf<Int, MutableMap<Int, Double>>()
 
-    this.network.setInputSequence(lss.contextVectors.toList())
+    this.networkProcessor.setInputSequence(lss.contextVectors.toList())
 
     lss.latentHeads.forEachIndexed { tokenIndex, latentHead ->
 
-      val prediction: DenseNDArray = this.network.forward(latentHead)
+      val prediction: DenseNDArray = this.networkProcessor.forward(latentHead)
 
       scores[tokenIndex] = mutableMapOf()
 
@@ -60,24 +60,24 @@ class HeadsPointer(private val network: PointerNetwork) : LSSDecoder {
    */
   fun learn(lss: LatentSyntacticStructure, goldHeads: Array<Int?>) {
 
-    this.network.setInputSequence(lss.contextVectors.toList())
-    this.network.backward(this.calculateErrors(lss.latentHeads, goldHeads))
+    this.networkProcessor.setInputSequence(lss.contextVectors.toList())
+    this.networkProcessor.backward(this.calculateErrors(lss.latentHeads, goldHeads))
   }
 
   /**
    * @return the params errors
    */
-  fun getParamsErrors(copy: Boolean = true) = this.network.getParamsErrors(copy = copy)
+  fun getParamsErrors(copy: Boolean = true) = this.networkProcessor.getParamsErrors(copy = copy)
 
   /**
    * @return the errors of the latent heads
    */
-  fun getLatentHeadsErrors(): Array<DenseNDArray> = this.network.getInputErrors().inputVectorsErrors.toTypedArray()
+  fun getLatentHeadsErrors(): Array<DenseNDArray> = this.networkProcessor.getInputErrors().inputVectorsErrors.toTypedArray()
 
   /**
    * @return the errors of the context vectors
    */
-  fun getContextVectorsErrors(): Array<DenseNDArray> = this.network.getInputErrors().inputSequenceErrors.toTypedArray()
+  fun getContextVectorsErrors(): Array<DenseNDArray> = this.networkProcessor.getInputErrors().inputSequenceErrors.toTypedArray()
 
   /**
    * @param latentHeads the latent heads
@@ -87,10 +87,10 @@ class HeadsPointer(private val network: PointerNetwork) : LSSDecoder {
 
     return latentHeads.mapIndexed { index, latentHead ->
 
-      val prediction: DenseNDArray = this.network.forward(latentHead)
+      val prediction: DenseNDArray = this.networkProcessor.forward(latentHead)
 
       val expectedValues = DenseNDArrayFactory.oneHotEncoder(
-        length = this.network.inputSequenceSize,
+        length = this.networkProcessor.inputSequenceSize,
         oneAt = goldHeads[index] ?: index) // self-root
 
       SoftmaxCrossEntropyCalculator().calculateErrors(

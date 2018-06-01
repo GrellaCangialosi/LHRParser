@@ -19,9 +19,9 @@ import com.kotlinnlp.neuralparser.language.Sentence
 import com.kotlinnlp.neuralparser.utils.loadFromTreeBank
 import com.kotlinnlp.simplednn.core.functionalities.activations.ReLU
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.adam.ADAMMethod
-import com.kotlinnlp.simplednn.encoders.birnn.BiRNNConfig
-import com.kotlinnlp.simplednn.embeddings.EmbeddingsMap
-import com.kotlinnlp.simplednn.embeddings.EmbeddingsMapByDictionary
+import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNConfig
+import com.kotlinnlp.simplednn.core.embeddings.EmbeddingsMap
+import com.kotlinnlp.simplednn.core.embeddings.EmbeddingsMapByDictionary
 import com.kotlinnlp.simplednn.utils.DictionarySet
 import com.kotlinnlp.tokensencoder.TokensEncoderModel
 import com.kotlinnlp.tokensencoder.embeddings.POSEmbeddingsKey

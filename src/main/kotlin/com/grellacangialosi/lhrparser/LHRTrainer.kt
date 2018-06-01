@@ -25,7 +25,7 @@ import com.kotlinnlp.dependencytree.POSTag
 import com.kotlinnlp.neuralparser.helpers.Trainer
 import com.kotlinnlp.neuralparser.helpers.Validator
 import com.kotlinnlp.neuralparser.language.Sentence
-import com.kotlinnlp.simplednn.attention.pointernetwork.PointerNetwork
+import com.kotlinnlp.simplednn.deeplearning.attention.pointernetwork.PointerNetworkProcessor
 import com.kotlinnlp.simplednn.core.functionalities.losses.MSECalculator
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.adam.ADAMMethod
@@ -138,7 +138,7 @@ class LHRTrainer(
   /**
    * The pointer network.
    */
-  private val pointerNetwork = PointerNetwork(this.parser.model.pointerNetworkModel)
+  private val pointerNetwork = PointerNetworkProcessor(this.parser.model.pointerNetworkModel)
 
   /**
    * The heads pointer optimizer.

@@ -10,7 +10,7 @@ package com.grellacangialosi.lhrparser.encoders.headsencoder
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 import com.kotlinnlp.neuralparser.language.Token
 import com.kotlinnlp.simplednn.core.neuralprocessor.batchfeedforward.BatchFeedforwardProcessor
-import com.kotlinnlp.simplednn.encoders.birnn.BiRNNEncoder
+import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNEncoder
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 
 /**

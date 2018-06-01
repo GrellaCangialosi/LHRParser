@@ -10,7 +10,7 @@ import com.grellacangialosi.lhrparser.LHRParser
 import com.grellacangialosi.lhrparser.LHRTransferLearning
 import com.kotlinnlp.neuralparser.helpers.Validator
 import com.kotlinnlp.neuralparser.language.CorpusDictionary
-import com.kotlinnlp.simplednn.embeddings.EmbeddingsMapByDictionary
+import com.kotlinnlp.simplednn.core.embeddings.EmbeddingsMapByDictionary
 import com.kotlinnlp.simplednn.utils.DictionarySet
 import com.kotlinnlp.tokensencoder.TokensEncoderModel
 import com.kotlinnlp.tokensencoder.embeddings.POSEmbeddingsKey
