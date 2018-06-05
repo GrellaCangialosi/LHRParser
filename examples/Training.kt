@@ -10,7 +10,7 @@ import com.grellacangialosi.lhrparser.LHRParser
 import com.grellacangialosi.lhrparser.LHRTrainer
 import com.grellacangialosi.lhrparser.labeler.LabelerTrainingMode
 import com.kotlinnlp.linguisticdescription.lexicon.LexiconDictionary
-import com.kotlinnlp.linguisticdescription.morphology.dictionary.MorphologyDictionary
+import com.kotlinnlp.morphologicalanalyzer.dictionary.MorphologyDictionary
 import com.kotlinnlp.simplednn.core.functionalities.activations.Tanh
 import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.neuralparser.helpers.Validator
@@ -28,6 +28,7 @@ import com.kotlinnlp.tokensencoder.embeddings.POSEmbeddingsKey
 import com.kotlinnlp.tokensencoder.embeddings.WordEmbeddingsKey
 import com.kotlinnlp.tokensencoder.embeddings.dictionary.EmbeddingsEncoderByDictionaryModel
 import com.kotlinnlp.tokensencoder.embeddings.pretrained.EmbeddingsEncoderByPretrainedModel
+import com.kotlinnlp.tokensencoder.ensamble.affine.AffineTokensEncoderModel
 import com.kotlinnlp.tokensencoder.ensamble.concat.ConcatTokensEncoderModel
 import com.kotlinnlp.tokensencoder.morpho.FeaturesCollector
 import com.kotlinnlp.tokensencoder.morpho.MorphoEncoderModel
@@ -152,7 +153,7 @@ fun buildTokensEncoderModel(parsedArgs: TrainingArgs,
 
     TrainingArgs.TokensEncodingType.WORD_AND_POS_EMBEDDINGS ->
 
-      return ConcatTokensEncoderModel(models = listOf(
+      return AffineTokensEncoderModel(models = listOf(
 
         EmbeddingsEncoderByDictionaryModel(
           embeddingsMap = EmbeddingsMapByDictionary(
@@ -167,7 +168,9 @@ fun buildTokensEncoderModel(parsedArgs: TrainingArgs,
             size = parsedArgs.posEmbeddingSize,
             dictionary = DictionarySet(corpus.posTags.getElements().map { it.label })),
           tokenEmbeddingKey = POSEmbeddingsKey,
-          dropoutCoefficient = parsedArgs.posDropoutCoefficient))
+          dropoutCoefficient = parsedArgs.posDropoutCoefficient)),
+        activation = null,
+        tokenEncodingSize = 100
       )
 
     TrainingArgs.TokensEncodingType.WORD_AND_EXT_AND_POS_EMBEDDINGS ->
