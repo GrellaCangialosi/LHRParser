@@ -277,7 +277,7 @@ class LHRTrainer(
         tokensHeads = goldTree.heads,
         tokensVectors = lss.contextVectors)
 
-      val headsPointer: HeadsPointer? = HeadsPointer(this.pointerNetwork) // TODO: fix
+      val headsPointer: HeadsPointer? = null // HeadsPointer(this.pointerNetwork) // TODO: fix
 
       // TODO: to refactor
       headsPointer?.let {
