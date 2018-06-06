@@ -10,8 +10,10 @@ package com.grellacangialosi.lhrparser.encoders.dependentsencoder
 import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
 
 /**
- * @property leftToRight the params of the left rnn of the [DependentsEncoder]
- * @property rightToLeft the params of the right rnn of the [DependentsEncoder]
+ * @property leftRNN the params of the left rnn of the [DependentsEncoder]
+ * @property rightRNN the params of the right rnn of the [DependentsEncoder]
  */
-class DependentsEncoderParams(val leftToRight: NetworkParameters,
-                              val rightToLeft: NetworkParameters)
+data class DependentsEncoderParams(
+  val leftRNN: NetworkParameters,
+  val rightRNN: NetworkParameters
+)
