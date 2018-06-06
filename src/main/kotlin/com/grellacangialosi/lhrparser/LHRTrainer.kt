@@ -12,6 +12,8 @@ import com.grellacangialosi.lhrparser.decoders.HeadsPointer
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoder
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderBuilder
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderOptimizer
+import com.grellacangialosi.lhrparser.encoders.dependentsencoder.DependentsEncoderBuilder
+import com.grellacangialosi.lhrparser.encoders.dependentsencoder.DependentsEncoderOptimizer
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoder
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderBuilder
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderOptimizer
@@ -141,6 +143,17 @@ class LHRTrainer(
   private val pointerNetwork = PointerNetworkProcessor(this.parser.model.pointerNetworkModel)
 
   /**
+   *
+   */
+  private val dependentsEncoder = DependentsEncoderBuilder(this.parser.model.dependentsEncoderModel).invoke()
+
+  /**
+   *
+   */
+  private val dependentsEncoderOptimizer =
+    DependentsEncoderOptimizer(this.parser.model.dependentsEncoderModel, updateMethod = this.updateMethod)
+
+  /**
    * The heads pointer optimizer.
    * TODO: fix usage
    */
@@ -156,7 +169,8 @@ class LHRTrainer(
     this.contextEncoderOptimizer,
     this.deprelAndPOSLabelerOptimizer,
     this.tokensEncoderOptimizer,
-    this.headsPointerOptimizer)
+    this.headsPointerOptimizer,
+    this.dependentsEncoderOptimizer)
 
   /**
    * @return a string representation of the configuration of this Trainer
@@ -285,6 +299,9 @@ class LHRTrainer(
         this.headsPointerOptimizer.accumulate(it.getParamsErrors(copy = false))
       }
 
+      //this.dependentsEncoder.learn(lss.contextVectors, goldTree)
+      //this.dependentsEncoderOptimizer.accumulate(this.dependentsEncoder.getParamsErrors())
+
       this.propagateErrors(
         errors = errors,
         goldTree = goldTree,
@@ -378,6 +395,8 @@ class LHRTrainer(
     headsPointer?.let {
       contextErrors.assignSum(headsPointer.getContextVectorsErrors()) // TODO: to refactor
     }
+
+    //contextErrors.assignSum(this.dependentsEncoder.getInputErrors().toTypedArray())
 
     labeler?.propagateErrors(
       goldTree = goldTree,
