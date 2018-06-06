@@ -7,8 +7,12 @@
 
 package com.grellacangialosi.lhrparser.encoders.dependentsencoder
 
+import com.kotlinnlp.dependencytree.DependencyTree
+import com.kotlinnlp.simplednn.core.functionalities.losses.MSECalculator
+import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
 import com.kotlinnlp.simplednn.core.neuralprocessor.recurrent.RecurrentNeuralProcessor
 import com.kotlinnlp.simplednn.core.neuralprocessor.recurrent.RecurrentNeuralProcessorsPool
+import com.kotlinnlp.simplednn.core.optimizer.ParamsErrorsAccumulator
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 
 /**
@@ -21,7 +25,10 @@ class DependentsEncoder(private val model: DependentsEncoderModel) {
   /**
    *
    */
-  private inner class Element {
+  private inner class Element(
+    private val tokenVector: DenseNDArray,
+    private val leftDependents: List<DenseNDArray>,
+    private val rightDependents: List<DenseNDArray>) {
 
     /**
      * The [RecurrentNeuralProcessor] to encode the left-children.
@@ -38,8 +45,36 @@ class DependentsEncoder(private val model: DependentsEncoderModel) {
     /**
      *
      */
-    fun forward(): Array<DenseNDArray> {
-      TODO()
+    fun learn() {
+      this.leftProcessor.learn((listOf(this.tokenVector) + this.leftDependents).toTypedArray())
+      this.rightProcessor.learn((listOf(this.tokenVector) + this.rightDependents).toTypedArray())
+    }
+
+    /**
+     *
+     */
+    fun getInputErrors(): DenseNDArray =
+      this.leftProcessor.getInputErrors(0).sum(this.rightProcessor.getInputErrors(0))
+
+    /**
+     *
+     */
+    fun getParamsErrors() = Pair(
+      this.leftProcessor.getParamsErrors(copy = false),
+      this.rightProcessor.getParamsErrors(copy = false))
+
+    /**
+     *
+     */
+    private fun RecurrentNeuralProcessor<DenseNDArray>.learn(inputArrays: Array<DenseNDArray>) {
+
+      this.forward(inputArrays)
+
+      this.backward(
+        MSECalculator().calculateErrors(
+          outputSequence = this.getOutputSequence(copy = false),
+          outputGoldSequence = inputArrays),
+        propagateToInput = true)
     }
   }
 
@@ -54,21 +89,32 @@ class DependentsEncoder(private val model: DependentsEncoderModel) {
   private val rightProcessorsPool = RecurrentNeuralProcessorsPool<DenseNDArray>(this.model.rightRNN)
 
   /**
+   *
+   */
+  private val elements = mutableListOf<Element>()
+
+  /**
    * @param tokensVectors the vectors that represent each token
    *
    * @return the latent heads representation
    */
-  fun encode(tokensVectors: Array<DenseNDArray>): Array<DenseNDArray> {
+  fun learn(tokensVectors: List<DenseNDArray>, dependencyTree: DependencyTree) {
 
+    this.elements.clear()
+    this.leftProcessorsPool.releaseAll()
+    this.rightProcessorsPool.releaseAll()
 
-    TODO()
-  }
+    tokensVectors.forEachIndexed { tokenIndex, tokenVector ->
 
-  /**
-   * @param errors the errors of the current encoding
-   */
-  fun backward(errors: Array<DenseNDArray>) {
-    TODO()
+      val element = Element(
+        tokenVector = tokenVector,
+        leftDependents = dependencyTree.leftDependents[tokenIndex].reversed().map { tokensVectors[it] },
+        rightDependents = dependencyTree.rightDependents[tokenIndex].map { tokensVectors[it] })
+
+      element.learn()
+
+      this.elements.add(element)
+    }
   }
 
   /**
@@ -76,14 +122,30 @@ class DependentsEncoder(private val model: DependentsEncoderModel) {
    *
    * @return the input errors
    */
-  fun getInputErrors(copy: Boolean = true): Array<DenseNDArray> = TODO()
+  fun getInputErrors(copy: Boolean = true): List<DenseNDArray> = this.elements.map { it.getInputErrors() }
 
   /**
    * @param copy a Boolean indicating whether the returned errors must be a copy or a reference
    *
    * @return the errors of the [DependentsEncoder] parameters
    */
-  fun getParamsErrors(copy: Boolean = true) {
-    TODO()
+  fun getParamsErrors(copy: Boolean = true): DependentsEncoderParams {
+
+    val leftAccumulator = ParamsErrorsAccumulator<NetworkParameters>()
+    val rightAccumulator = ParamsErrorsAccumulator<NetworkParameters>()
+
+    this.elements.forEach { element ->
+      val (leftParamsErrors, rightParamsErrors) = element.getParamsErrors()
+
+      leftAccumulator.accumulate(leftParamsErrors)
+      rightAccumulator.accumulate(rightParamsErrors)
+    }
+
+    leftAccumulator.averageErrors()
+    rightAccumulator.averageErrors()
+
+    return DependentsEncoderParams(
+      leftRNN = leftAccumulator.getParamsErrors(copy = false),
+      rightRNN = rightAccumulator.getParamsErrors(copy = false))
   }
 }
