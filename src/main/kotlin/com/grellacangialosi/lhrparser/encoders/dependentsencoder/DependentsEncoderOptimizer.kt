@@ -26,21 +26,21 @@ class DependentsEncoderOptimizer(
   /**
    * The Optimizer of the left encoder parameters.
    */
-  private val leftEncoderOptimizer: ParamsOptimizer<NetworkParameters> =
+  private val leftRNNOptimizer: ParamsOptimizer<NetworkParameters> =
     ParamsOptimizer(params = this.model.leftRNN.model, updateMethod = this.updateMethod)
 
   /**
    * The Optimizer of the right encoder parameters.
    */
-  private val rightEncoderOptimizer: ParamsOptimizer<NetworkParameters> =
-    ParamsOptimizer(params = this.model.leftRNN.model, updateMethod = this.updateMethod)
+  private val rightRNNOptimizer: ParamsOptimizer<NetworkParameters> =
+    ParamsOptimizer(params = this.model.rightRNN.model, updateMethod = this.updateMethod)
 
   /**
    * Update the parameters of the neural element associated to this optimizer.
    */
   override fun update() {
-    this.leftEncoderOptimizer.update()
-    this.rightEncoderOptimizer.update()
+    this.leftRNNOptimizer.update()
+    this.rightRNNOptimizer.update()
   }
 
   /**
@@ -52,7 +52,7 @@ class DependentsEncoderOptimizer(
    */
   fun accumulate(paramsErrors: DependentsEncoderParams, copy: Boolean = true) {
 
-    this.leftEncoderOptimizer.accumulate(paramsErrors.leftToRight, copy = copy)
-    this.rightEncoderOptimizer.accumulate(paramsErrors.rightToLeft, copy = copy)
+    this.leftRNNOptimizer.accumulate(paramsErrors.leftRNN, copy = copy)
+    this.rightRNNOptimizer.accumulate(paramsErrors.rightRNN, copy = copy)
   }
 }
