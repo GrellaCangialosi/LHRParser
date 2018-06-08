@@ -98,15 +98,15 @@ class LHRTransferLearning(
 
     val targetTokensEncoder: TokensEncoder = this.targetTokensEncoderBuilder.invoke()
     val targetContextEncoder: ContextEncoder = this.targetContextEncoderBuilder.invoke()
-    val targetTokensEncodings: Array<DenseNDArray> = targetTokensEncoder.encode(sentence.tokens)
+    val targetTokensEncodings: List<DenseNDArray> = targetTokensEncoder.encode(sentence.tokens)
     val targetContextVectors = targetContextEncoder.encode(targetTokensEncodings)
 
     val refTokensEncoder: TokensEncoder = this.referenceTokensEncoderBuilder.invoke()
     val refContextEncoder: ContextEncoder = this.referenceContextEncoderBuilder.invoke()
-    val refTokensEncodings: Array<DenseNDArray> = refTokensEncoder.encode(sentence.tokens)
+    val refTokensEncodings: List<DenseNDArray> = refTokensEncoder.encode(sentence.tokens)
     val refContextVectors = refContextEncoder.encode(refTokensEncodings)
 
-    val errors: Array<DenseNDArray> = MSECalculator().calculateErrors(
+    val errors: List<DenseNDArray> = MSECalculator().calculateErrors(
       outputSequence = targetContextVectors,
       outputGoldSequence = refContextVectors)
 
@@ -121,7 +121,7 @@ class LHRTransferLearning(
    *
    * @return the input errors
    */
-  private fun ContextEncoder.propagateErrors(outputErrors: Array<DenseNDArray>): Array<DenseNDArray> {
+  private fun ContextEncoder.propagateErrors(outputErrors: List<DenseNDArray>): List<DenseNDArray> {
 
     this.backward(outputErrors)
     this@LHRTransferLearning.targetContextEncoderOptimizer.accumulate(this.getParamsErrors(copy = false))
@@ -134,7 +134,7 @@ class LHRTransferLearning(
    *
    * @param outputErrors the output errors
    */
-  private fun TokensEncoder.propagateErrors(outputErrors: Array<DenseNDArray>) {
+  private fun TokensEncoder.propagateErrors(outputErrors: List<DenseNDArray>) {
 
     this.backward(outputErrors)
     this@LHRTransferLearning.targetTokensEncoderOptimizer.accumulate(this.getParamsErrors(copy = false))

@@ -10,7 +10,7 @@ package com.grellacangialosi.lhrparser.encoders.headsencoder
 import com.kotlinnlp.simplednn.core.functionalities.activations.ActivationFunction
 import com.kotlinnlp.simplednn.core.functionalities.initializers.GlorotInitializer
 import com.kotlinnlp.simplednn.core.functionalities.initializers.Initializer
-import com.kotlinnlp.simplednn.core.layers.LayerConfiguration
+import com.kotlinnlp.simplednn.core.layers.LayerInterface
 import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.simplednn.core.neuralnetwork.NeuralNetwork
 import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNN
@@ -61,10 +61,10 @@ class HeadsEncoderModel(
    * The model of the Feedforward Network that reduces the output size of the heads [biRNN].
    */
   val outputNetwork = NeuralNetwork(
-    LayerConfiguration(
+    LayerInterface(
       size = this.biRNN.outputSize,
-      inputType = LayerType.Input.Dense),
-    LayerConfiguration(
+      type = LayerType.Input.Dense),
+    LayerInterface(
       size = this.biRNN.inputSize,
       activationFunction = null,
       connectionType = LayerType.Connection.Feedforward

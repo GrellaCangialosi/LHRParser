@@ -15,7 +15,7 @@ import com.kotlinnlp.simplednn.core.functionalities.activations.Tanh
 import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.simplednn.deeplearning.multitasknetwork.MultiTaskNetworkConfig
 import com.kotlinnlp.simplednn.deeplearning.multitasknetwork.MultiTaskNetworkModel
-import com.kotlinnlp.simplednn.utils.DictionarySet
+import com.kotlinnlp.utils.DictionarySet
 import java.io.Serializable
 
 /**

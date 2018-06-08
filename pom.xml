@@ -69,6 +69,7 @@
         <neuralparser.version>[0.2.8]</neuralparser.version>
         <linguisticdescription.version>0.8.0</linguisticdescription.version>
         <tokensencoder.version>[0.1.0]</tokensencoder.version>
+        <utils.version>2.1.0</utils.version>
     </properties>
 
     <repositories>
@@ -270,6 +271,12 @@
             <groupId>com.kotlinnlp</groupId>
             <artifactId>tokensencoder</artifactId>
             <version>${tokensencoder.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.kotlinnlp</groupId>
+            <artifactId>utils</artifactId>
+            <version>${utils.version}</version>
         </dependency>
     </dependencies>
 </project>

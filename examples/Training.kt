@@ -22,7 +22,6 @@ import com.kotlinnlp.simplednn.core.functionalities.updatemethods.adam.ADAMMetho
 import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNConfig
 import com.kotlinnlp.simplednn.core.embeddings.EmbeddingsMap
 import com.kotlinnlp.simplednn.core.embeddings.EmbeddingsMapByDictionary
-import com.kotlinnlp.simplednn.utils.DictionarySet
 import com.kotlinnlp.tokensencoder.TokensEncoderModel
 import com.kotlinnlp.tokensencoder.embeddings.POSEmbeddingsKey
 import com.kotlinnlp.tokensencoder.embeddings.WordEmbeddingsKey
@@ -32,6 +31,7 @@ import com.kotlinnlp.tokensencoder.ensamble.affine.AffineTokensEncoderModel
 import com.kotlinnlp.tokensencoder.ensamble.concat.ConcatTokensEncoderModel
 import com.kotlinnlp.tokensencoder.morpho.FeaturesCollector
 import com.kotlinnlp.tokensencoder.morpho.MorphoEncoderModel
+import com.kotlinnlp.utils.DictionarySet
 import com.xenomachina.argparser.mainBody
 import utils.TrainingArgs
 import java.io.File

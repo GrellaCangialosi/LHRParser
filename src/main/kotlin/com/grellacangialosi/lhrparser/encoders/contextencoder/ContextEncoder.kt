@@ -27,13 +27,13 @@ class ContextEncoder(private val model: ContextEncoderModel) {
    *
    * @return the context vectors of the tokens
    */
-  fun encode(tokensEncodings: Array<DenseNDArray>): Array<DenseNDArray> =
+  fun encode(tokensEncodings: List<DenseNDArray>): List<DenseNDArray> =
     this.encoder.encode(sequence = tokensEncodings, useDropout = true)
 
   /**
    * @param errors the errors of the current encoding
    */
-  fun backward(errors: Array<DenseNDArray>) {
+  fun backward(errors: List<DenseNDArray>) {
 
     this.encoder.backward(errors, propagateToInput = true)
   }
@@ -43,7 +43,7 @@ class ContextEncoder(private val model: ContextEncoderModel) {
    *
    * @return the input errors
    */
-  fun getInputErrors(copy: Boolean = true): Array<DenseNDArray> = this.encoder.getInputSequenceErrors(copy = copy)
+  fun getInputErrors(copy: Boolean = true): List<DenseNDArray> = this.encoder.getInputSequenceErrors(copy = copy)
 
   /**
    * @param copy a Boolean indicating whether the returned errors must be a copy or a reference

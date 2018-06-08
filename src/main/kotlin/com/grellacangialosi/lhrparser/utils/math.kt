@@ -7,22 +7,8 @@
 
 package com.grellacangialosi.lhrparser.utils
 
-import com.kotlinnlp.simplednn.core.functionalities.losses.MSECalculator
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
-
-/**
- * Calculate the errors of a sequence.
- *
- * @param outputSequence a List containing the output of the network for each example of a sequence
- * @param outputGoldSequence a List containing the output gold sequence
- *
- * @return an array containing the errors for each example of the sequence
- */
-fun MSECalculator.calculateErrors(outputSequence: List<DenseNDArray>, outputGoldSequence: List<DenseNDArray>) =
-  this.calculateErrors(
-    outputSequence = outputSequence.toTypedArray(),
-    outputGoldSequence = outputGoldSequence.toTypedArray())
 
 /**
  * Get the index of the highest value without considering the one at the given [exceptIndex].

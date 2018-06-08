@@ -10,7 +10,7 @@ package com.grellacangialosi.lhrparser.encoders.dependentsencoder
 import com.kotlinnlp.simplednn.core.functionalities.activations.ActivationFunction
 import com.kotlinnlp.simplednn.core.functionalities.initializers.GlorotInitializer
 import com.kotlinnlp.simplednn.core.functionalities.initializers.Initializer
-import com.kotlinnlp.simplednn.core.layers.LayerConfiguration
+import com.kotlinnlp.simplednn.core.layers.LayerInterface
 import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.simplednn.core.neuralnetwork.NeuralNetwork
 import java.io.Serializable
@@ -47,16 +47,16 @@ class DependentsEncoderModel(
    * The Recurrent Neural Network to process the sequence left-to-right.
    */
   val leftRNN = NeuralNetwork(
-    LayerConfiguration(
+    LayerInterface(
       size = this.tokenEncodingSize,
-      inputType = LayerType.Input.Dense,
+      type = LayerType.Input.Dense,
       dropout = recurrentDropout),
-    LayerConfiguration(
+    LayerInterface(
       size = this.tokenEncodingSize,
       activationFunction = this.hiddenActivation,
       connectionType = this.connectionType
     ),
-    LayerConfiguration(
+    LayerInterface(
       size = this.tokenEncodingSize,
       activationFunction = null,
       connectionType = LayerType.Connection.Feedforward
@@ -69,16 +69,16 @@ class DependentsEncoderModel(
    * The Recurrent Neural Network to process the sequence right-to-left.
    */
   val rightRNN = NeuralNetwork(
-    LayerConfiguration(
+    LayerInterface(
       size = this.tokenEncodingSize,
-      inputType = LayerType.Input.Dense,
+      type = LayerType.Input.Dense,
       dropout = recurrentDropout),
-    LayerConfiguration(
+    LayerInterface(
       size = this.tokenEncodingSize,
       activationFunction = this.hiddenActivation,
       connectionType = this.connectionType
     ),
-    LayerConfiguration(
+    LayerInterface(
       size = this.tokenEncodingSize,
       activationFunction = null,
       connectionType = LayerType.Connection.Feedforward

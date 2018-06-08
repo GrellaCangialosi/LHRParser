@@ -72,12 +72,12 @@ class HeadsPointer(private val networkProcessor: PointerNetworkProcessor) : LSSD
   /**
    * @return the errors of the latent heads
    */
-  fun getLatentHeadsErrors(): Array<DenseNDArray> = this.networkProcessor.getInputErrors().inputVectorsErrors.toTypedArray()
+  fun getLatentHeadsErrors(): List<DenseNDArray> = this.networkProcessor.getInputErrors().inputVectorsErrors
 
   /**
    * @return the errors of the context vectors
    */
-  fun getContextVectorsErrors(): Array<DenseNDArray> = this.networkProcessor.getInputErrors().inputSequenceErrors.toTypedArray()
+  fun getContextVectorsErrors(): List<DenseNDArray> = this.networkProcessor.getInputErrors().inputSequenceErrors
 
   /**
    * @param latentHeads the latent heads

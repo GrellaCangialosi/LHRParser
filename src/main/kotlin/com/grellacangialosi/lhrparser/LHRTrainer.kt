@@ -21,7 +21,6 @@ import com.grellacangialosi.lhrparser.labeler.DeprelAndPOSLabeler
 import com.grellacangialosi.lhrparser.labeler.DeprelAndPOSLabelerBuilder
 import com.grellacangialosi.lhrparser.labeler.DeprelAndPOSLabelerOptimizer
 import com.grellacangialosi.lhrparser.utils.ArcScores
-import com.grellacangialosi.lhrparser.utils.calculateErrors
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.dependencytree.POSTag
 import com.kotlinnlp.neuralparser.helpers.Trainer
@@ -379,7 +378,7 @@ class LHRTrainer(
    * @param labeler the labeler
    */
   private fun propagateErrors(
-    errors: Array<DenseNDArray>,
+    errors: List<DenseNDArray>,
     goldTree: DependencyTree,
     goldPosTags: Array<POSTag?>?,
     encoder: LSSEncoder,
@@ -402,7 +401,7 @@ class LHRTrainer(
       goldTree = goldTree,
       goldPosTags = goldPosTags ?: goldTree.posTags)?.let { labelerInputErrors ->
 
-      val (extContextErrors: Array<DenseNDArray>, rootErrors: DenseNDArray) = labelerInputErrors
+      val (extContextErrors: List<DenseNDArray>, rootErrors: DenseNDArray) = labelerInputErrors
 
       contextErrors.assignSum(extContextErrors)
 
@@ -420,7 +419,7 @@ class LHRTrainer(
    *
    * @return the input errors
    */
-  private fun HeadsEncoder.propagateErrors(outputErrors: Array<DenseNDArray>): Array<DenseNDArray> {
+  private fun HeadsEncoder.propagateErrors(outputErrors: List<DenseNDArray>): List<DenseNDArray> {
 
     this.backward(outputErrors)
     this@LHRTrainer.headsEncoderOptimizer.accumulate(this.getParamsErrors(copy = false))
@@ -435,7 +434,7 @@ class LHRTrainer(
    *
    * @return the input errors
    */
-  private fun ContextEncoder.propagateErrors(outputErrors: Array<DenseNDArray>): Array<DenseNDArray> {
+  private fun ContextEncoder.propagateErrors(outputErrors: List<DenseNDArray>): List<DenseNDArray> {
 
     this.backward(outputErrors)
     this@LHRTrainer.contextEncoderOptimizer.accumulate(this.getParamsErrors(copy = false))
@@ -450,7 +449,7 @@ class LHRTrainer(
    * @param goldPosTags the gold pos tags (can be null)
    */
   private fun DeprelAndPOSLabeler.propagateErrors(goldTree: DependencyTree,
-                                                  goldPosTags: Array<POSTag?>?): Pair<Array<DenseNDArray>, DenseNDArray> {
+                                                  goldPosTags: Array<POSTag?>?): Pair<List<DenseNDArray>, DenseNDArray> {
 
     this.backward(goldDeprels = goldTree.deprels, goldPosTags = goldPosTags ?: goldTree.posTags)
     this@LHRTrainer.deprelAndPOSLabelerOptimizer!!.accumulate(this.getParamsErrors(copy = false))
@@ -463,7 +462,7 @@ class LHRTrainer(
    *
    * @param outputErrors the output errors
    */
-  private fun TokensEncoder.propagateErrors(outputErrors: Array<DenseNDArray>) {
+  private fun TokensEncoder.propagateErrors(outputErrors: List<DenseNDArray>) {
 
     this.backward(outputErrors)
     this@LHRTrainer.tokensEncoderOptimizer.accumulate(this.getParamsErrors(copy = false))

@@ -35,16 +35,16 @@ class HeadsEncoder(private val model: HeadsEncoderModel) {
    *
    * @return the latent heads representation
    */
-  fun encode(tokensVectors: Array<DenseNDArray>): Array<DenseNDArray> =
+  fun encode(tokensVectors: List<DenseNDArray>): List<DenseNDArray> =
     this.outputEncoder.forward(this.encoder.encode(tokensVectors, useDropout = true))
 
   /**
    * @param errors the errors of the current encoding
    */
-  fun backward(errors: Array<DenseNDArray>) {
+  fun backward(errors: List<DenseNDArray>) {
 
     this.outputEncoder.backward(errors, propagateToInput = true)
-    return this.encoder.backward(this.outputEncoder.getBatchInputErrors(copy = false), propagateToInput = true)
+    return this.encoder.backward(this.outputEncoder.getInputErrors(copy = false), propagateToInput = true)
   }
 
   /**
@@ -52,7 +52,7 @@ class HeadsEncoder(private val model: HeadsEncoderModel) {
    *
    * @return the input errors
    */
-  fun getInputErrors(copy: Boolean = true): Array<DenseNDArray> = this.encoder.getInputSequenceErrors(copy = copy)
+  fun getInputErrors(copy: Boolean = true): List<DenseNDArray> = this.encoder.getInputSequenceErrors(copy = copy)
 
   /**
    * @param copy a Boolean indicating whether the returned errors must be a copy or a reference

@@ -139,17 +139,17 @@ class DeprelAndPOSLabeler(private val model: DeprelAndPOSLabelerModel, private v
   /**
    * @return the input errors and the root errors
    */
-  fun getInputErrors(): Pair<Array<DenseNDArray>, DenseNDArray> {
+  fun getInputErrors(): Pair<List<DenseNDArray>, DenseNDArray> {
 
     val contextVectorsSize: Int = this.model.multitaskNetworkModel.inputSize / 2 // [dependent, governor] as input
-    val errors = Array(size = this.usedNetworks.size, init = { DenseNDArrayFactory.zeros(Shape(contextVectorsSize)) })
+    val errors = List(size = this.usedNetworks.size, init = { DenseNDArrayFactory.zeros(Shape(contextVectorsSize)) })
     lateinit var rootErrors: DenseNDArray
 
     this.usedNetworks
       .map { it.getInputErrors(copy = false) }
       .forEachIndexed { dependentId, inputErrors ->
 
-        val splitErrors: Array<DenseNDArray> = inputErrors.splitV(contextVectorsSize)
+        val splitErrors: List<DenseNDArray> = inputErrors.splitV(contextVectorsSize)
         val governorId: Int? = this.lastTokensHeads[dependentId]
 
         errors[dependentId].assignSum(splitErrors[0])

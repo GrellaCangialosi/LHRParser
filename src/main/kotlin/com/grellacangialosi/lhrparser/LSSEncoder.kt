@@ -35,9 +35,9 @@ class LSSEncoder(
    */
   fun encode(tokens: List<Token>): LatentSyntacticStructure {
 
-    val tokensEncodings: Array<DenseNDArray> = this.tokensEncoder.encode(tokens)
-    val contextVectors: Array<DenseNDArray> = this.contextEncoder.encode(tokensEncodings)
-    val latentHeads: Array<DenseNDArray> = this.headsEncoder.encode(contextVectors)
+    val tokensEncodings: List<DenseNDArray> = this.tokensEncoder.encode(tokens).toList()
+    val contextVectors: List<DenseNDArray> = this.contextEncoder.encode(tokensEncodings)
+    val latentHeads: List<DenseNDArray> = this.headsEncoder.encode(contextVectors)
 
     return LatentSyntacticStructure(
       tokens = tokens,

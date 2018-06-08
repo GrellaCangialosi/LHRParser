@@ -46,8 +46,8 @@ class DependentsEncoder(private val model: DependentsEncoderModel) {
      *
      */
     fun learn() {
-      this.leftProcessor.learn((listOf(this.tokenVector) + this.leftDependents).toTypedArray())
-      this.rightProcessor.learn((listOf(this.tokenVector) + this.rightDependents).toTypedArray())
+      this.leftProcessor.learn((listOf(this.tokenVector) + this.leftDependents))
+      this.rightProcessor.learn((listOf(this.tokenVector) + this.rightDependents))
     }
 
     /**
@@ -66,7 +66,7 @@ class DependentsEncoder(private val model: DependentsEncoderModel) {
     /**
      *
      */
-    private fun RecurrentNeuralProcessor<DenseNDArray>.learn(inputArrays: Array<DenseNDArray>) {
+    private fun RecurrentNeuralProcessor<DenseNDArray>.learn(inputArrays: List<DenseNDArray>) {
 
       this.forward(inputArrays)
 

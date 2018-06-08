@@ -11,12 +11,12 @@ import com.grellacangialosi.lhrparser.LHRTransferLearning
 import com.kotlinnlp.neuralparser.helpers.Validator
 import com.kotlinnlp.neuralparser.language.CorpusDictionary
 import com.kotlinnlp.simplednn.core.embeddings.EmbeddingsMapByDictionary
-import com.kotlinnlp.simplednn.utils.DictionarySet
 import com.kotlinnlp.tokensencoder.TokensEncoderModel
 import com.kotlinnlp.tokensencoder.embeddings.POSEmbeddingsKey
 import com.kotlinnlp.tokensencoder.embeddings.WordEmbeddingsKey
 import com.kotlinnlp.tokensencoder.embeddings.dictionary.EmbeddingsEncoderByDictionaryModel
 import com.kotlinnlp.tokensencoder.ensamble.concat.ConcatTokensEncoderModel
+import com.kotlinnlp.utils.DictionarySet
 import com.xenomachina.argparser.mainBody
 import utils.TransferLearningArgs
 import java.io.File
