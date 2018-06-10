@@ -9,7 +9,6 @@ package com.grellacangialosi.lhrparser.encoders.headsencoder
 
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 import com.kotlinnlp.neuralparser.language.Token
-import com.kotlinnlp.simplednn.core.neuralprocessor.batchfeedforward.BatchFeedforwardProcessor
 import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNEncoder
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 
@@ -26,25 +25,18 @@ class HeadsEncoder(private val model: HeadsEncoderModel) {
   private val encoder = BiRNNEncoder<DenseNDArray>(this.model.biRNN)
 
   /**
-   * The Feedforward Encoder that reduces the size of the output of the [encoder].
-   */
-  private val outputEncoder = BatchFeedforwardProcessor<DenseNDArray>(this.model.outputNetwork)
-
-  /**
    * @param tokensVectors the vectors that represent each token
    *
    * @return the latent heads representation
    */
   fun encode(tokensVectors: List<DenseNDArray>): List<DenseNDArray> =
-    this.outputEncoder.forward(this.encoder.encode(tokensVectors, useDropout = true))
+    this.encoder.encode(tokensVectors, useDropout = true)
 
   /**
    * @param errors the errors of the current encoding
    */
   fun backward(errors: List<DenseNDArray>) {
-
-    this.outputEncoder.backward(errors, propagateToInput = true)
-    return this.encoder.backward(this.outputEncoder.getInputErrors(copy = false), propagateToInput = true)
+    return this.encoder.backward(errors, propagateToInput = true)
   }
 
   /**
@@ -60,8 +52,7 @@ class HeadsEncoder(private val model: HeadsEncoderModel) {
    * @return the errors of the [HeadsEncoder] parameters
    */
   fun getParamsErrors(copy: Boolean = true) = HeadsEncoderParams(
-    biRNNParameters = this.encoder.getParamsErrors(copy = copy),
-    feedforwardParameters = this.outputEncoder.getParamsErrors(copy = copy)
+    biRNNParameters = this.encoder.getParamsErrors(copy = copy)
   )
 
   /**

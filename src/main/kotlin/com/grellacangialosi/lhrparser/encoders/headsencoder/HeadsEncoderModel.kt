@@ -10,10 +10,8 @@ package com.grellacangialosi.lhrparser.encoders.headsencoder
 import com.kotlinnlp.simplednn.core.functionalities.activations.ActivationFunction
 import com.kotlinnlp.simplednn.core.functionalities.initializers.GlorotInitializer
 import com.kotlinnlp.simplednn.core.functionalities.initializers.Initializer
-import com.kotlinnlp.simplednn.core.layers.LayerInterface
 import com.kotlinnlp.simplednn.core.layers.LayerType
-import com.kotlinnlp.simplednn.core.neuralnetwork.NeuralNetwork
-import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNN
+import com.kotlinnlp.simplednn.deeplearning.birnn.mergeconfig.ConcatAffineMerge
 import java.io.Serializable
 
 /**
@@ -47,7 +45,7 @@ class HeadsEncoderModel(
   /**
    * The BiRNN of the HeadsEncoder.
    */
-  val biRNN = BiRNN(
+  val biRNN = com.kotlinnlp.simplednn.deeplearning.birnn.BiRNN(
     inputType = LayerType.Input.Dense,
     inputSize = this.tokenEncodingSize,
     dropout = recurrentDropout,
@@ -55,21 +53,6 @@ class HeadsEncoderModel(
     hiddenActivation = this.hiddenActivation,
     hiddenSize = this.tokenEncodingSize,
     weightsInitializer = weightsInitializer,
-    biasesInitializer = biasesInitializer)
-
-  /**
-   * The model of the Feedforward Network that reduces the output size of the heads [biRNN].
-   */
-  val outputNetwork = NeuralNetwork(
-    LayerInterface(
-      size = this.biRNN.outputSize,
-      type = LayerType.Input.Dense),
-    LayerInterface(
-      size = this.biRNN.inputSize,
-      activationFunction = null,
-      connectionType = LayerType.Connection.Feedforward
-    ),
-    weightsInitializer = weightsInitializer,
-    biasesInitializer = null
-  )
+    biasesInitializer = biasesInitializer,
+    outputMergeConfiguration = ConcatAffineMerge(outputSize = this.tokenEncodingSize))
 }

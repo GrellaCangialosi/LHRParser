@@ -8,7 +8,6 @@
 package com.grellacangialosi.lhrparser.encoders.headsencoder
 
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
-import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
 import com.kotlinnlp.simplednn.core.optimizer.Optimizer
 import com.kotlinnlp.simplednn.core.optimizer.ParamsOptimizer
 import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNParameters
@@ -31,17 +30,10 @@ class HeadsEncoderOptimizer(
     ParamsOptimizer(params = this.model.biRNN.model, updateMethod = this.updateMethod)
 
   /**
-   * The Optimizer of the outputEncoder parameters.
-   */
-  private val outputEncoderOptimizer: ParamsOptimizer<NetworkParameters> =
-    ParamsOptimizer(params = this.model.outputNetwork.model, updateMethod = this.updateMethod)
-
-  /**
    * Update the parameters of the neural element associated to this optimizer.
    */
   override fun update() {
     this.encoderOptimizer.update()
-    this.outputEncoderOptimizer.update()
   }
 
   /**
@@ -52,8 +44,6 @@ class HeadsEncoderOptimizer(
    *             to optimize the accumulation when the amount of the errors to accumulate is 1. (default = true)
    */
   fun accumulate(paramsErrors: HeadsEncoderParams, copy: Boolean = true) {
-
-    this.outputEncoderOptimizer.accumulate(paramsErrors.feedforwardParameters, copy = copy)
     this.encoderOptimizer.accumulate(paramsErrors.biRNNParameters, copy = copy)
   }
 }
