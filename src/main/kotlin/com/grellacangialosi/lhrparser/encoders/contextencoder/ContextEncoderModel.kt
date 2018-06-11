@@ -11,6 +11,7 @@ import com.kotlinnlp.simplednn.core.functionalities.activations.ActivationFuncti
 import com.kotlinnlp.simplednn.core.functionalities.initializers.GlorotInitializer
 import com.kotlinnlp.simplednn.core.functionalities.initializers.Initializer
 import com.kotlinnlp.simplednn.core.layers.LayerType
+import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNN
 import com.kotlinnlp.simplednn.deeplearning.birnn.deepbirnn.DeepBiRNN
 import java.io.Serializable
 
@@ -48,14 +49,25 @@ class ContextEncoderModel(
    * The BiRNN of the ContextEncoder.
    */
   val biRNN = DeepBiRNN(
-    inputType = LayerType.Input.Dense,
-    inputSize = this.tokenEncodingSize,
-    dropout = dropout,
-    recurrentConnectionType = this.connectionType,
-    hiddenActivation = this.hiddenActivation,
-    numberOfLayers = this.numberOfLayers,
-    weightsInitializer = weightsInitializer,
-    biasesInitializer = biasesInitializer)
+    BiRNN(
+      inputType = LayerType.Input.Dense,
+      inputSize = this.tokenEncodingSize,
+      dropout = dropout,
+      recurrentConnectionType = this.connectionType,
+      hiddenSize = this.tokenEncodingSize,
+      hiddenActivation = this.hiddenActivation,
+      weightsInitializer = weightsInitializer,
+      biasesInitializer = biasesInitializer),
+    BiRNN(
+      inputType = LayerType.Input.Dense,
+      inputSize = this.tokenEncodingSize * 2,
+      dropout = dropout,
+      recurrentConnectionType = this.connectionType,
+      hiddenSize = this.tokenEncodingSize,
+      hiddenActivation = this.hiddenActivation,
+      weightsInitializer = weightsInitializer,
+      biasesInitializer = biasesInitializer)
+  )
 
   /**
    * The size of the output context vectors.
