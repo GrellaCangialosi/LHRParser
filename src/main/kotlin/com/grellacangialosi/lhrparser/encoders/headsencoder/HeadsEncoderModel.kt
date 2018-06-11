@@ -11,6 +11,7 @@ import com.kotlinnlp.simplednn.core.functionalities.activations.ActivationFuncti
 import com.kotlinnlp.simplednn.core.functionalities.initializers.GlorotInitializer
 import com.kotlinnlp.simplednn.core.functionalities.initializers.Initializer
 import com.kotlinnlp.simplednn.core.layers.LayerType
+import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNN
 import com.kotlinnlp.simplednn.deeplearning.birnn.mergeconfig.ConcatAffineMerge
 import java.io.Serializable
 
@@ -45,7 +46,7 @@ class HeadsEncoderModel(
   /**
    * The BiRNN of the HeadsEncoder.
    */
-  val biRNN = com.kotlinnlp.simplednn.deeplearning.birnn.BiRNN(
+  val biRNN = BiRNN(
     inputType = LayerType.Input.Dense,
     inputSize = this.tokenEncodingSize,
     dropout = recurrentDropout,
