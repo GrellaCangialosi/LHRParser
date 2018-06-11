@@ -7,12 +7,12 @@
 
 package com.grellacangialosi.lhrparser.labeler
 
-import com.grellacangialosi.lhrparser.utils.getErrorsByHingeLoss
-import com.grellacangialosi.lhrparser.utils.getErrorsBySoftmax
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.neuralparser.language.Token
 import com.kotlinnlp.dependencytree.Deprel
 import com.kotlinnlp.dependencytree.POSTag
+import com.kotlinnlp.simplednn.core.functionalities.losses.SoftmaxCrossEntropyCalculator
+import com.kotlinnlp.simplednn.core.functionalities.losses.getErrorsByHingeLoss
 import com.kotlinnlp.simplednn.deeplearning.multitasknetwork.MultiTaskNetwork
 import com.kotlinnlp.simplednn.deeplearning.multitasknetwork.MultitaskNetworksPool
 import com.kotlinnlp.simplednn.simplemath.concatVectorsV
@@ -258,8 +258,11 @@ class DeprelAndPOSLabeler(private val model: DeprelAndPOSLabelerModel, private v
    */
   private fun getPredictionErrors(prediction: DenseNDArray, goldIndex: Int): DenseNDArray =
     when (this.model.trainingMode) {
-      LabelerTrainingMode.Softmax -> getErrorsBySoftmax(prediction = prediction, goldIndex = goldIndex)
-      LabelerTrainingMode.HingeLoss -> getErrorsByHingeLoss(prediction = prediction, goldIndex = goldIndex)
+      LabelerTrainingMode.Softmax ->
+        SoftmaxCrossEntropyCalculator().calculateErrors(output = prediction, goldIndex = goldIndex)
+
+      LabelerTrainingMode.HingeLoss ->
+        getErrorsByHingeLoss(prediction = prediction, goldIndex = goldIndex)
     }
 
   /**
