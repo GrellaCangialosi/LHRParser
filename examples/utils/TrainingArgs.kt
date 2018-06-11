@@ -189,22 +189,6 @@ class TrainingArgs(args: Array<String>) {
   )
 
   /**
-   * Whether to propagate only if errors are relevant.
-   */
-  val onlyRelevantErrors: Boolean by parser.flagging(
-    "--only-relevant-err",
-    help="whether to propagate only if errors are relevant"
-  )
-
-  /**
-   * Whether to propagate only if errors are relevant.
-   */
-  val relaxReconstructionErrors: Boolean by parser.flagging(
-    "--relax-errors",
-    help="whether to ignore the latent heads errors if the attachment is already correct"
-  )
-
-  /**
    * The file path of the serialized morphology dictionary.
    */
   val morphoDictionaryPath: String? by parser.storing(

@@ -238,8 +238,6 @@ fun buildTrainer(parser: LHRParser, parsedArgs: TrainingArgs) = LHRTrainer(
   validator = Validator(neuralParser = parser, goldFilePath = parsedArgs.validationSetPath),
   modelFilename = parsedArgs.modelPath,
   lhrErrorsOptions = LHRTrainer.LHRErrorsOptions(
-    skipPunctuationErrors = parsedArgs.skipPunctuationErrors,
-    calculateRelevantErrorsOnly = parsedArgs.onlyRelevantErrors,
-    relaxReconstructionErrors = parsedArgs.relaxReconstructionErrors),
+    skipPunctuationErrors = parsedArgs.skipPunctuationErrors),
   updateMethod = ADAMMethod(stepSize = 0.001, beta1 = 0.9, beta2 = 0.999),
   verbose = !parsedArgs.quiet)

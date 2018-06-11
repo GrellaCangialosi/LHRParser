@@ -7,7 +7,6 @@
 
 package com.grellacangialosi.lhrparser
 
-import com.grellacangialosi.lhrparser.decoders.HeadsDecoder
 import com.grellacangialosi.lhrparser.decoders.HeadsPointer
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoder
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderBuilder
@@ -40,7 +39,6 @@ import com.kotlinnlp.tokensencoder.TokensEncoder
 import com.kotlinnlp.tokensencoder.TokensEncoderBuilder
 import com.kotlinnlp.tokensencoder.TokensEncoderFactory
 import com.kotlinnlp.tokensencoder.TokensEncoderOptimizerFactory
-import java.lang.Math.abs
 
 /**
  * The training helper.
@@ -75,13 +73,8 @@ class LHRTrainer(
 
   /**
    * @property skipPunctuationErrors whether to do not consider punctuation errors
-   * @property calculateRelevantErrorsOnly whether to calculate the errors only if they are relevant
-   * @property relaxReconstructionErrors whether to ignore the latent heads errors if the attachment is already correct
    */
-  data class LHRErrorsOptions(
-    val skipPunctuationErrors: Boolean,
-    val calculateRelevantErrorsOnly: Boolean,
-    val relaxReconstructionErrors: Boolean)
+  data class LHRErrorsOptions(val skipPunctuationErrors: Boolean)
 
   /**
    * A more convenient access to the embeddings values of the virtual root.
@@ -178,12 +171,10 @@ class LHRTrainer(
     %-33s : %s
     %-33s : %s
     %-33s : %s
-    %-33s : %s
   """.trimIndent().format(
     "Epochs", this.epochs,
     "Batch size", this.batchSize,
-    "Skip punctuation errors", this.lhrErrorsOptions.skipPunctuationErrors,
-    "Propagate only on relevant errors", this.lhrErrorsOptions.calculateRelevantErrorsOnly
+    "Skip punctuation errors", this.lhrErrorsOptions.skipPunctuationErrors
   )
 
   /**
@@ -281,35 +272,34 @@ class LHRTrainer(
       outputSequence = lss.latentHeads,
       outputGoldSequence = this.getExpectedLatentHeads(lss, goldTree.heads))
 
-    if (errors.any { (0 .. it.length).any { value -> abs(value) > 1.0e-03 } }) { // there are errors
 
-      val labeler: DeprelAndPOSLabeler? = this.deprelAndPOSLabelerBuilder?.invoke()
+    val labeler: DeprelAndPOSLabeler? = this.deprelAndPOSLabelerBuilder?.invoke()
 
-      labeler?.predict( // important to calculate the right errors
-        tokens = sentence.tokens,
-        tokensHeads = goldTree.heads,
-        tokensVectors = lss.contextVectors)
+    labeler?.predict( // important to calculate the right errors
+      tokens = sentence.tokens,
+      tokensHeads = goldTree.heads,
+      tokensVectors = lss.contextVectors)
 
-      val headsPointer: HeadsPointer? = null // HeadsPointer(this.pointerNetwork) // TODO: fix
+    val headsPointer: HeadsPointer? = null // HeadsPointer(this.pointerNetwork) // TODO: fix
 
-      // TODO: to refactor
-      headsPointer?.let {
-        it.learn(lss, goldTree.heads)
-        this.headsPointerOptimizer.accumulate(it.getParamsErrors(copy = false))
-      }
-
-      //this.dependentsEncoder.learn(lss.contextVectors, goldTree)
-      //this.dependentsEncoderOptimizer.accumulate(this.dependentsEncoder.getParamsErrors())
-
-      this.propagateErrors(
-        errors = errors,
-        goldTree = goldTree,
-        goldPosTags = goldPosTags ?: goldTree.posTags,
-        encoder = encoder,
-        headsPointer = headsPointer,
-        labeler = labeler)
+    // TODO: to refactor
+    headsPointer?.let {
+      it.learn(lss, goldTree.heads)
+      this.headsPointerOptimizer.accumulate(it.getParamsErrors(copy = false))
     }
+
+    //this.dependentsEncoder.learn(lss.contextVectors, goldTree)
+    //this.dependentsEncoderOptimizer.accumulate(this.dependentsEncoder.getParamsErrors())
+
+    this.propagateErrors(
+      errors = errors,
+      goldTree = goldTree,
+      goldPosTags = goldPosTags ?: goldTree.posTags,
+      encoder = encoder,
+      headsPointer = headsPointer,
+      labeler = labeler)
   }
+
 
   /**
    * @param scores the attachment scores
@@ -333,19 +323,9 @@ class LHRTrainer(
   private fun getExpectedLatentHeads(lss: LatentSyntacticStructure,
                                      goldHeads: Array<Int?>): List<DenseNDArray> {
 
-    val predictedTree: DependencyTree by lazy {
-      this.buildDependencyTree(HeadsDecoder().decode(lss))
-    }
-
     return lss.tokens.zip(goldHeads).map { (token, goldHeadId) ->
 
       when {
-
-        this.lhrErrorsOptions.relaxReconstructionErrors &&
-          predictedTree.heads[token.id] == goldHeadId &&
-          predictedTree.attachmentScores[token.id] >= 0.9 ->
-
-          lss.latentHeads[token.id] // this means no errors
 
         goldHeadId == null -> lss.virtualRoot
 
