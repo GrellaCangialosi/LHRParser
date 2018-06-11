@@ -12,7 +12,7 @@ import com.kotlinnlp.simplednn.core.functionalities.initializers.GlorotInitializ
 import com.kotlinnlp.simplednn.core.functionalities.initializers.Initializer
 import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNN
-import com.kotlinnlp.simplednn.deeplearning.birnn.mergeconfig.ConcatAffineMerge
+import com.kotlinnlp.simplednn.deeplearning.birnn.mergeconfig.ConcatFeedforwardMerge
 import java.io.Serializable
 
 /**
@@ -55,5 +55,5 @@ class HeadsEncoderModel(
     hiddenSize = this.tokenEncodingSize,
     weightsInitializer = weightsInitializer,
     biasesInitializer = biasesInitializer,
-    outputMergeConfiguration = ConcatAffineMerge(outputSize = this.tokenEncodingSize))
+    outputMergeConfiguration = ConcatFeedforwardMerge(outputSize = this.tokenEncodingSize))
 }
