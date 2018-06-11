@@ -23,7 +23,7 @@ class HeadsDecoder : LSSDecoder {
    * The private map of scored arcs.
    * Scores are mapped by dependents to governors ids (the root is intended to have id = -1).
    */
-  private val _scores = mutableMapOf<Int, MutableMap<Int, Double>>()
+  private val similarityMatrix = mutableMapOf<Int, MutableMap<Int, Double>>()
 
   /**
    * The latent syntactic structure that contains the context-vectors and latent-heads used in the calculation of
@@ -50,23 +50,23 @@ class HeadsDecoder : LSSDecoder {
 
     lss.tokens.forEach {
 
-      this._scores[it.id] = mutableMapOf()
+      this.similarityMatrix[it.id] = mutableMapOf()
 
       this.setHeadsScores(it)
       this.setRootScores(it)
     }
 
-    return ArcScores(scores = this._scores)
+    return ArcScores(scores = this.similarityMatrix)
   }
 
   /**
-   * Set the heads scores of the given [dependent] in the [_scores] map.
+   * Set the heads scores of the given [dependent] in the [similarityMatrix] map.
    *
    * @param dependent the the dependent token
    */
   private fun setHeadsScores(dependent: Token) {
 
-    val scores: MutableMap<Int, Double> = this._scores.getValue(dependent.id)
+    val scores: MutableMap<Int, Double> = this.similarityMatrix.getValue(dependent.id)
 
     this.lssNorm.tokens
       .filterNot { it.id == dependent.id || it.isPunctuation }
@@ -76,17 +76,17 @@ class HeadsDecoder : LSSDecoder {
   }
 
   /**
-   * Set the root score of the given [dependent] in the [_scores] map.
+   * Set the root score of the given [dependent] in the [similarityMatrix] map.
    *
    * @param dependent the the dependent token
    */
   private fun setRootScores(dependent: Token) {
 
-    this._scores.getValue(dependent.id)[rootId] = 0.0 // default root score
+    this.similarityMatrix.getValue(dependent.id)[rootId] = 0.0 // default root score
 
     if (!dependent.isPunctuation) { // the root shouldn't be a punctuation token
 
-      this._scores.getValue(dependent.id)[rootId] = similarity(
+      this.similarityMatrix.getValue(dependent.id)[rootId] = similarity(
         a = this.lssNorm.latentHeads[dependent.id],
         b = this.lssNorm.virtualRoot)
     }
