@@ -85,10 +85,8 @@ class DeprelAndPOSLabeler(private val model: DeprelAndPOSLabelerModel, private v
 
       } else {
 
-        val (deprel: Deprel, posTag: POSTag) = this.getBestDeprelAndPosTag(prediction)
-
-        dependencyTree.setDeprel(tokenId, deprel)
-        dependencyTree.setPosTag(tokenId, posTag)
+        dependencyTree.setDeprel(tokenId, this.getDeprel(prediction.deprels.argMaxIndex()))
+        dependencyTree.setPosTag(tokenId, this.getPosTag(prediction.posTags.argMaxIndex()))
       }
     }
   }
@@ -205,10 +203,7 @@ class DeprelAndPOSLabeler(private val model: DeprelAndPOSLabelerModel, private v
 
     tokens.map { it.id }.zip(tokensHeads).forEach { (dependentId, headId) ->
 
-      val encodedHead: DenseNDArray = when {
-        headId != null -> tokensVectors[headId]
-        else -> this.rootVector
-      }
+      val encodedHead: DenseNDArray = headId?.let { tokensVectors[it] } ?: this.rootVector
 
       features.add(concatVectorsV(tokensVectors[dependentId], encodedHead))
     }
@@ -264,44 +259,6 @@ class DeprelAndPOSLabeler(private val model: DeprelAndPOSLabelerModel, private v
       LabelerTrainingMode.HingeLoss ->
         getErrorsByHingeLoss(prediction = prediction, goldIndex = goldIndex)
     }
-
-  /**
-   * Get the <deprel, posTag> pair with the highest combined score.
-   * It is required that the 'posTags' of the prediction is not null.
-   *
-   * @param prediction a prediction of the labeler
-   *
-   * @return a pair with the best deprel and POS tag
-   */
-  private fun getBestDeprelAndPosTag(prediction: DeprelAndPOSLabeler.Prediction): Pair<Deprel, POSTag> {
-    require(prediction.posTags != null)
-
-    var bestScore: Double? = null
-    var bestPair: Pair<Deprel, POSTag>? = null
-
-    val posTags: List<POSTag> = (0 until prediction.posTags!!.length).map { this.getPosTag(it) }
-
-    (0 until prediction.deprels.length).forEach { deprelId ->
-
-      val deprel: Deprel = this.getDeprel(deprelId)
-      val deprelScore: Double = prediction.deprels[deprelId]
-      val possiblePosTags: Set<POSTag> = this.model.deprelPosTagCombinations[deprel]!!
-
-      posTags.forEachIndexed { posTagId, posTag ->
-
-        val posTagScore: Double = prediction.posTags[posTagId]
-        val score: Double = posTagScore + deprelScore
-        val isBestScore: Boolean = bestScore == null || score > bestScore!!
-
-        if (posTag in possiblePosTags && isBestScore) {
-          bestScore = score
-          bestPair = Pair(deprel, posTag)
-        }
-      }
-    }
-
-    return bestPair!!
-  }
 
   /**
    * @param deprelId a deprel id
