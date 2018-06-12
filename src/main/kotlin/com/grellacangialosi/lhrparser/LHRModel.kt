@@ -22,6 +22,7 @@ import com.kotlinnlp.simplednn.core.functionalities.activations.Tanh
 import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.simplednn.deeplearning.attention.pointernetwork.PointerNetworkModel
 import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNConfig
+import com.kotlinnlp.simplednn.deeplearning.birnn.mergeconfig.AffineMerge
 import com.kotlinnlp.tokensencoder.TokensEncoderModel
 import com.kotlinnlp.utils.Serializer
 import java.io.InputStream
@@ -114,7 +115,7 @@ class LHRModel(
   val pointerNetworkModel = PointerNetworkModel(
     inputSize = this.contextVectorsSize,
     vectorSize = this.contextVectorsSize,
-    attentionSize = 50) // TODO: fix this
+    mergeConfig = AffineMerge(outputSize = 50, activationFunction = Tanh()))
 
   /**
    *
