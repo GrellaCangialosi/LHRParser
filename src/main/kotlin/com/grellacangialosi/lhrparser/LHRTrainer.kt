@@ -272,7 +272,6 @@ class LHRTrainer(
       outputSequence = lss.latentHeads,
       outputGoldSequence = this.getExpectedLatentHeads(lss, goldTree.heads))
 
-
     val labeler: DeprelLabeler? = this.deprelLabelerBuilder?.invoke()
 
     labeler?.predict( // important to calculate the right errors
@@ -420,11 +419,10 @@ class LHRTrainer(
   }
 
   /**
-   * Calculate the labeler errors respect to the [goldTree] and [goldPosTags], accumulates the resulting parameters
+   * Calculate the labeler errors respect to the [goldTree], accumulates the resulting parameters
    * errors in the [deprelLabelerOptimizer] and returns the input errors.
    *
    * @param goldTree the gold dependency tree
-   * @param goldPosTags the gold pos tags (can be null)
    */
   private fun DeprelLabeler.propagateErrors(goldTree: DependencyTree): Pair<List<DenseNDArray>, DenseNDArray> {
 
