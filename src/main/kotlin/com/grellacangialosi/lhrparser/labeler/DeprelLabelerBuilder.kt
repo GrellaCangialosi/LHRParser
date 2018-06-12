@@ -7,24 +7,23 @@
 
 package com.grellacangialosi.lhrparser.labeler
 
-import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoder
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 
 /**
- * A simple [HeadsEncoder] builder.
+ * A simple [DeprelLabeler] builder.
  *
  * @param model the encoder model
  * @param rootVector the vector that represents the root token
  */
-class DeprelAndPOSLabelerBuilder(model: DeprelAndPOSLabelerModel, rootVector: DenseNDArray){
+class DeprelLabelerBuilder(model: DeprelLabelerModel, rootVector: DenseNDArray){
 
   /**
    * The context encoder.
    */
-  private val labeler = DeprelAndPOSLabeler(model, rootVector)
+  private val labeler = DeprelLabeler(model, rootVector)
 
   /**
    * @return the [labeler]
    */
-  operator fun invoke(): DeprelAndPOSLabeler = this.labeler
+  operator fun invoke(): DeprelLabeler = this.labeler
 }

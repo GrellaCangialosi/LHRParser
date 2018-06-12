@@ -10,7 +10,7 @@ package com.grellacangialosi.lhrparser
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderModel
 import com.grellacangialosi.lhrparser.encoders.dependentsencoder.DependentsEncoderModel
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderModel
-import com.grellacangialosi.lhrparser.labeler.DeprelAndPOSLabelerModel
+import com.grellacangialosi.lhrparser.labeler.DeprelLabelerModel
 import com.grellacangialosi.lhrparser.labeler.LabelerTrainingMode
 import com.kotlinnlp.simplednn.core.arrays.UpdatableDenseArray
 import com.kotlinnlp.simplednn.core.functionalities.initializers.GlorotInitializer
@@ -100,13 +100,10 @@ class LHRModel(
   /**
    * The model of the Labeler.
    */
-  val labelerModel: DeprelAndPOSLabelerModel? = if (this.useLabeler)
-    DeprelAndPOSLabelerModel(
+  val labelerModel: DeprelLabelerModel? = if (this.useLabeler)
+    DeprelLabelerModel(
       tokenEncodingSize = this.contextVectorsSize,
       deprels = this.corpusDictionary.deprelTags,
-      posTags = this.corpusDictionary.posTags,
-      deprelPosTagCombinations = this.corpusDictionary.deprelPosTagCombinations,
-      predictPosTags = this.predictPosTags,
       trainingMode = this.labelerTrainingMode)
   else
     null

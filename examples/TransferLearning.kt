@@ -73,7 +73,7 @@ fun main(args: Array<String>) = mainBody {
 fun LHRModel.copyParamsOf(model: LHRModel) {
 
   this.headsEncoderModel.biRNN.model.assignValues(model.headsEncoderModel.biRNN.model)
-  this.labelerModel?.multitaskNetworkModel?.params?.assignValues(model.labelerModel!!.multitaskNetworkModel.params)
+  this.labelerModel?.networkModel?.model?.assignValues(model.labelerModel!!.networkModel.model)
   this.rootEmbedding.array.values.assignValues(model.rootEmbedding.array.values)
 }
 

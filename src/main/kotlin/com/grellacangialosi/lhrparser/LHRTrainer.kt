@@ -16,9 +16,9 @@ import com.grellacangialosi.lhrparser.encoders.dependentsencoder.DependentsEncod
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoder
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderBuilder
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderOptimizer
-import com.grellacangialosi.lhrparser.labeler.DeprelAndPOSLabeler
-import com.grellacangialosi.lhrparser.labeler.DeprelAndPOSLabelerBuilder
-import com.grellacangialosi.lhrparser.labeler.DeprelAndPOSLabelerOptimizer
+import com.grellacangialosi.lhrparser.labeler.DeprelLabeler
+import com.grellacangialosi.lhrparser.labeler.DeprelLabelerBuilder
+import com.grellacangialosi.lhrparser.labeler.DeprelLabelerOptimizer
 import com.grellacangialosi.lhrparser.utils.ArcScores
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.dependencytree.POSTag
@@ -100,8 +100,8 @@ class LHRTrainer(
   /**
    * The builder of the labeler.
    */
-  private val deprelAndPOSLabelerBuilder: DeprelAndPOSLabelerBuilder? = this.parser.model.labelerModel?.let {
-    DeprelAndPOSLabelerBuilder(model = it, rootVector = this.virtualRoot)
+  private val deprelLabelerBuilder: DeprelLabelerBuilder? = this.parser.model.labelerModel?.let {
+    DeprelLabelerBuilder(model = it, rootVector = this.virtualRoot)
   }
 
   /**
@@ -119,8 +119,8 @@ class LHRTrainer(
   /**
    * The optimizer of the labeler (can be null).
    */
-  private val deprelAndPOSLabelerOptimizer: DeprelAndPOSLabelerOptimizer? = this.parser.model.labelerModel?.let {
-    DeprelAndPOSLabelerOptimizer(model = this.parser.model.labelerModel, updateMethod = this.updateMethod)
+  private val deprelLabelerOptimizer: DeprelLabelerOptimizer? = this.parser.model.labelerModel?.let {
+    DeprelLabelerOptimizer(model = this.parser.model.labelerModel, updateMethod = this.updateMethod)
   }
 
   /**
@@ -159,7 +159,7 @@ class LHRTrainer(
   private val optimizers = listOf(
     this.headsEncoderOptimizer,
     this.contextEncoderOptimizer,
-    this.deprelAndPOSLabelerOptimizer,
+    this.deprelLabelerOptimizer,
     this.tokensEncoderOptimizer,
     this.headsPointerOptimizer,
     this.dependentsEncoderOptimizer)
@@ -273,7 +273,7 @@ class LHRTrainer(
       outputGoldSequence = this.getExpectedLatentHeads(lss, goldTree.heads))
 
 
-    val labeler: DeprelAndPOSLabeler? = this.deprelAndPOSLabelerBuilder?.invoke()
+    val labeler: DeprelLabeler? = this.deprelLabelerBuilder?.invoke()
 
     labeler?.predict( // important to calculate the right errors
       tokens = sentence.tokens,
@@ -363,7 +363,7 @@ class LHRTrainer(
     goldPosTags: Array<POSTag?>?,
     encoder: LSSEncoder,
     headsPointer: HeadsPointer?,
-    labeler: DeprelAndPOSLabeler?){
+    labeler: DeprelLabeler?){
 
     headsPointer?.let {
       errors.assignSum(headsPointer.getLatentHeadsErrors()) // // TODO: to refactor
@@ -377,9 +377,7 @@ class LHRTrainer(
 
     //contextErrors.assignSum(this.dependentsEncoder.getInputErrors().toTypedArray())
 
-    labeler?.propagateErrors(
-      goldTree = goldTree,
-      goldPosTags = goldPosTags ?: goldTree.posTags)?.let { labelerInputErrors ->
+    labeler?.propagateErrors(goldTree)?.let { labelerInputErrors ->
 
       val (extContextErrors: List<DenseNDArray>, rootErrors: DenseNDArray) = labelerInputErrors
 
@@ -423,16 +421,15 @@ class LHRTrainer(
 
   /**
    * Calculate the labeler errors respect to the [goldTree] and [goldPosTags], accumulates the resulting parameters
-   * errors in the [deprelAndPOSLabelerOptimizer] and returns the input errors.
+   * errors in the [deprelLabelerOptimizer] and returns the input errors.
    *
    * @param goldTree the gold dependency tree
    * @param goldPosTags the gold pos tags (can be null)
    */
-  private fun DeprelAndPOSLabeler.propagateErrors(goldTree: DependencyTree,
-                                                  goldPosTags: Array<POSTag?>?): Pair<List<DenseNDArray>, DenseNDArray> {
+  private fun DeprelLabeler.propagateErrors(goldTree: DependencyTree): Pair<List<DenseNDArray>, DenseNDArray> {
 
-    this.backward(goldDeprels = goldTree.deprels, goldPosTags = goldPosTags ?: goldTree.posTags)
-    this@LHRTrainer.deprelAndPOSLabelerOptimizer!!.accumulate(this.getParamsErrors(copy = false))
+    this.backward(goldDeprels = goldTree.deprels)
+    this@LHRTrainer.deprelLabelerOptimizer!!.accumulate(this.getParamsErrors(copy = false))
     return this.getInputErrors()
   }
 

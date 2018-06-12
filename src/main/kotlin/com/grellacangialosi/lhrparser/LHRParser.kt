@@ -15,8 +15,8 @@ import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoder
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderBuilder
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoder
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderBuilder
-import com.grellacangialosi.lhrparser.labeler.DeprelAndPOSLabeler
-import com.grellacangialosi.lhrparser.labeler.DeprelAndPOSLabelerBuilder
+import com.grellacangialosi.lhrparser.labeler.DeprelLabeler
+import com.grellacangialosi.lhrparser.labeler.DeprelLabelerBuilder
 import com.grellacangialosi.lhrparser.utils.ArcScores.Companion.rootId
 import com.grellacangialosi.lhrparser.utils.CyclesFixer
 import com.kotlinnlp.neuralparser.NeuralParser
@@ -56,8 +56,8 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
   /**
    * The builder of the labeler.
    */
-  private val deprelAndPOSLabelerBuilder: DeprelAndPOSLabelerBuilder? = this.model.labelerModel?.let {
-    DeprelAndPOSLabelerBuilder(model = it, rootVector = this.virtualRoot)
+  private val deprelLabelerBuilder: DeprelLabelerBuilder? = this.model.labelerModel?.let {
+    DeprelLabelerBuilder(model = it, rootVector = this.virtualRoot)
   }
 
   /**
@@ -148,7 +148,7 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
    */
   private fun assignLabels(dependencyTree: DependencyTree, lss: LatentSyntacticStructure) {
 
-    val labeler: DeprelAndPOSLabeler? = this@LHRParser.deprelAndPOSLabelerBuilder?.invoke()
+    val labeler: DeprelLabeler? = this@LHRParser.deprelLabelerBuilder?.invoke()
 
     labeler?.assignLabels(
       tokens = lss.tokens,

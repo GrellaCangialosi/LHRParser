@@ -8,16 +8,16 @@
 package com.grellacangialosi.lhrparser.labeler
 
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
+import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
 import com.kotlinnlp.simplednn.core.optimizer.Optimizer
 import com.kotlinnlp.simplednn.core.optimizer.ParamsOptimizer
-import com.kotlinnlp.simplednn.deeplearning.multitasknetwork.MultiTaskNetworkParameters
 
 /**
  * @param updateMethod the update method helper (Learning Rate, ADAM, AdaGrad, ...)
  * @param model the model of this optimizer
  */
-class DeprelAndPOSLabelerOptimizer(
-  private val model: DeprelAndPOSLabelerModel,
+class DeprelLabelerOptimizer(
+  private val model: DeprelLabelerModel,
   updateMethod: UpdateMethod<*>
 ) : Optimizer(
   updateMethod = updateMethod
@@ -26,8 +26,8 @@ class DeprelAndPOSLabelerOptimizer(
   /**
    * The optimizer of the network
    */
-  private val optimizer: ParamsOptimizer<MultiTaskNetworkParameters> =
-    ParamsOptimizer(params = this.model.multitaskNetworkModel.params, updateMethod = this.updateMethod)
+  private val optimizer: ParamsOptimizer<NetworkParameters> =
+    ParamsOptimizer(params = this.model.networkModel.model, updateMethod = this.updateMethod)
 
   /**
    * Update the parameters of the neural element associated to this optimizer.
@@ -43,10 +43,7 @@ class DeprelAndPOSLabelerOptimizer(
    * @param copy a Boolean indicating if the [paramsErrors] can be used as reference or must be copied. Set copy = false
    *             to optimize the accumulation when the amount of the errors to accumulate is 1. (default = true)
    */
-  fun accumulate(paramsErrors: DeprelAndPOSLabelerParams, copy: Boolean = true) {
-
-    paramsErrors.multiTaskParams.forEach {
-      this.optimizer.accumulate(paramsErrors = it, copy = copy)
-    }
+  fun accumulate(paramsErrors: DeprelLabelerParams, copy: Boolean = true) {
+    this.optimizer.accumulate(paramsErrors = paramsErrors.params, copy = copy)
   }
 }

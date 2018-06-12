@@ -7,9 +7,9 @@
 
 package com.grellacangialosi.lhrparser.labeler
 
-import com.kotlinnlp.simplednn.deeplearning.multitasknetwork.MultiTaskNetworkParameters
+import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
 
 /**
- * @property multiTaskParams the parameters of the [DeprelAndPOSLabeler]
+ * @property params the parameters of the [DeprelLabeler]
  */
-class DeprelAndPOSLabelerParams(val multiTaskParams: List<MultiTaskNetworkParameters>)
+class DeprelLabelerParams(val params: NetworkParameters)
