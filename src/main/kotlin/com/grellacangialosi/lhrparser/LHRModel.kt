@@ -8,7 +8,6 @@
 package com.grellacangialosi.lhrparser
 
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderModel
-import com.grellacangialosi.lhrparser.encoders.dependentsencoder.DependentsEncoderModel
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderModel
 import com.grellacangialosi.lhrparser.labeler.DeprelLabelerModel
 import com.grellacangialosi.lhrparser.labeler.LabelerTrainingMode
@@ -19,7 +18,6 @@ import com.kotlinnlp.simplednn.simplemath.ndarray.Shape
 import com.kotlinnlp.neuralparser.NeuralParserModel
 import com.kotlinnlp.neuralparser.language.CorpusDictionary
 import com.kotlinnlp.simplednn.core.functionalities.activations.Tanh
-import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.simplednn.deeplearning.attention.pointernetwork.PointerNetworkModel
 import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNConfig
 import com.kotlinnlp.simplednn.deeplearning.birnn.mergeconfig.AffineMerge
@@ -116,14 +114,6 @@ class LHRModel(
     inputSize = this.contextVectorsSize,
     vectorSize = this.contextVectorsSize,
     mergeConfig = AffineMerge(outputSize = 50, activationFunction = Tanh()))
-
-  /**
-   *
-   */
-  val dependentsEncoderModel = DependentsEncoderModel(
-    tokenEncodingSize = this.contextVectorsSize,
-    connectionType = LayerType.Connection.LSTM,
-    hiddenActivation = Tanh())
 
   /**
    * Initialize the root embedding.
