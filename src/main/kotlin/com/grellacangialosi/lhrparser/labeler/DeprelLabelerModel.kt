@@ -20,12 +20,12 @@ import java.io.Serializable
  *
  * @property tokenEncodingSize the size of the token encoding vectors
  * @property deprels the dictionary set of all possible deprels
- * @property trainingMode the training mode
+ * @property lossCriterion the training mode
  */
 class DeprelLabelerModel(
   val tokenEncodingSize: Int,
   val deprels: DictionarySet<Deprel>,
-  val trainingMode: LabelerTrainingMode
+  val lossCriterion: LossCriterion
 ) : Serializable {
 
   /**
@@ -39,9 +39,9 @@ class DeprelLabelerModel(
       size = this.deprels.size,
       dropout = 0.0,
       connectionType = LayerType.Connection.Feedforward,
-      activationFunction = when (this.trainingMode) {
-        LabelerTrainingMode.Softmax -> Softmax()
-        LabelerTrainingMode.HingeLoss -> null
+      activationFunction = when (this.lossCriterion) {
+        LossCriterion.Softmax -> Softmax()
+        LossCriterion.HingeLoss -> null
       })
   )
 }

@@ -10,7 +10,7 @@ package com.grellacangialosi.lhrparser
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderModel
 import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderModel
 import com.grellacangialosi.lhrparser.labeler.DeprelLabelerModel
-import com.grellacangialosi.lhrparser.labeler.LabelerTrainingMode
+import com.grellacangialosi.lhrparser.labeler.LossCriterion
 import com.kotlinnlp.simplednn.core.arrays.UpdatableDenseArray
 import com.kotlinnlp.simplednn.core.functionalities.initializers.GlorotInitializer
 import com.kotlinnlp.simplednn.core.embeddings.Embedding
@@ -34,7 +34,7 @@ import java.io.InputStream
  * @property contextBiRNNConfig the configuration of the ContextEncoder BiRNN (if null the ContextEncoder is not used)
  * @property headsBiRNNConfig the configuration of the HeadsEncoder BiRNN
  * @property useLabeler whether to use the labeler
- * @property labelerTrainingMode the training mode of the labeler
+ * @property lossCriterion the training mode of the labeler
  * @property predictPosTags whether to predict the POS tags together with the Deprels
  */
 class LHRModel(
@@ -44,7 +44,7 @@ class LHRModel(
   val contextBiRNNConfig: BiRNNConfig,
   val headsBiRNNConfig: BiRNNConfig,
   val useLabeler: Boolean,
-  val labelerTrainingMode: LabelerTrainingMode,
+  val lossCriterion: LossCriterion,
   val predictPosTags: Boolean
 ) : NeuralParserModel() {
 
@@ -103,7 +103,7 @@ class LHRModel(
     DeprelLabelerModel(
       tokenEncodingSize = this.contextVectorsSize,
       deprels = this.corpusDictionary.deprelTags,
-      trainingMode = this.labelerTrainingMode)
+      lossCriterion = this.lossCriterion)
   else
     null
 
@@ -135,7 +135,7 @@ class LHRModel(
     this.tokensEncoderModel::class.simpleName, this.tokensEncoderModel,
     "Context Encoder", this.contextBiRNNConfig,
     "Heads Encoder", this.headsBiRNNConfig,
-    "Labeler training mode", this.labelerTrainingMode,
+    "Labeler training mode", this.lossCriterion,
     "Predict POS tags", this.predictPosTags
   )
 }

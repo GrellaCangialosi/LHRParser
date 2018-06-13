@@ -13,4 +13,4 @@ package com.grellacangialosi.lhrparser.labeler
  * @property Softmax activate the output with a Softmax function and calculate the errors as mean errors
  * @property HingeLoss don't activate the output and calculate the errors with the hinge loss method
  */
-enum class LabelerTrainingMode { Softmax, HingeLoss }
+enum class LossCriterion { Softmax, HingeLoss }

@@ -188,11 +188,11 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
    * @return the errors of the given prediction
    */
   private fun getPredictionErrors(prediction: DenseNDArray, goldIndex: Int): DenseNDArray =
-    when (this.model.trainingMode) {
-      LabelerTrainingMode.Softmax ->
+    when (this.model.lossCriterion) {
+      LossCriterion.Softmax ->
         SoftmaxCrossEntropyCalculator().calculateErrors(output = prediction, goldIndex = goldIndex)
 
-      LabelerTrainingMode.HingeLoss ->
+      LossCriterion.HingeLoss ->
         getErrorsByHingeLoss(prediction = prediction, goldIndex = goldIndex)
     }
 

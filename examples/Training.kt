@@ -8,7 +8,7 @@
 import com.grellacangialosi.lhrparser.LHRModel
 import com.grellacangialosi.lhrparser.LHRParser
 import com.grellacangialosi.lhrparser.LHRTrainer
-import com.grellacangialosi.lhrparser.labeler.LabelerTrainingMode
+import com.grellacangialosi.lhrparser.labeler.LossCriterion
 import com.kotlinnlp.linguisticdescription.lexicon.LexiconDictionary
 import com.kotlinnlp.morphologicalanalyzer.dictionary.MorphologyDictionary
 import com.kotlinnlp.simplednn.core.functionalities.activations.Tanh
@@ -132,7 +132,7 @@ fun buildParser(parsedArgs: TrainingArgs,
     connectionType = LayerType.Connection.LSTM,
     hiddenActivation = Tanh()),
   useLabeler = !parsedArgs.noLabeler,
-  labelerTrainingMode = LabelerTrainingMode.HingeLoss,
+  lossCriterion = LossCriterion.HingeLoss,
   predictPosTags = !parsedArgs.noPosPrediction))
 
 /**
