@@ -19,12 +19,12 @@ import java.io.Serializable
 /**
  * The model of the [DeprelLabeler].
  *
- * @property tokenEncodingSize the size of the token encoding vectors
+ * @property contextEncodingSize the size of the token encoding vectors
  * @property deprels the dictionary set of all possible deprels
  * @property lossCriterionType the training mode
  */
 class DeprelLabelerModel(
-  val tokenEncodingSize: Int,
+  val contextEncodingSize: Int,
   val deprels: DictionarySet<Deprel>,
   val lossCriterionType: LossCriterionType
 ) : Serializable {
@@ -33,8 +33,12 @@ class DeprelLabelerModel(
    * The Network model that predicts the Deprels
    */
   val networkModel: NeuralNetwork = NeuralNetwork(
-    LayerInterface(sizes = listOf(this.tokenEncodingSize, this.tokenEncodingSize)), // [dependent, governor]
-    LayerInterface(size = 2 * this.tokenEncodingSize, connectionType = LayerType.Connection.Concat, dropout = 0.2),
+    // [contextDependent, contextGovernor]
+    LayerInterface(sizes = listOf(this.contextEncodingSize, this.contextEncodingSize)),
+    LayerInterface(
+      size = 2 * this.contextEncodingSize,
+      connectionType = LayerType.Connection.Concat,
+      dropout = 0.2),
     LayerInterface(
       type = LayerType.Input.Dense,
       size = this.deprels.size,
