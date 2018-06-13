@@ -52,9 +52,7 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
    */
   fun assignLabels(lss: LatentSyntacticStructure, dependencyTree: DependencyTree) {
 
-    val labelerPredictions = this.predict(
-      lss = lss,
-      tokensHeads = dependencyTree.heads)
+    val labelerPredictions = this.predict(lss, dependencyTree.heads)
 
     labelerPredictions.forEachIndexed { tokenId, prediction ->
       dependencyTree.setDeprel(tokenId, this.getDeprel(prediction.deprels.argMaxIndex()))
