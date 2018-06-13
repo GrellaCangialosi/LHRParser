@@ -94,7 +94,7 @@ fun buildTargetParser(parsedArgs: TransferLearningArgs,
   contextBiRNNConfig = referenceModel.contextBiRNNConfig,
   headsBiRNNConfig = referenceModel.headsBiRNNConfig,
   useLabeler = referenceModel.useLabeler,
-  lossCriterion = referenceModel.lossCriterion,
+  lossCriterionType = referenceModel.lossCriterionType,
   predictPosTags = referenceModel.predictPosTags))
 
 /**

@@ -7,6 +7,7 @@
 
 package com.grellacangialosi.lhrparser.labeler
 
+import com.grellacangialosi.lhrparser.labeler.utils.LossCriterionType
 import com.kotlinnlp.dependencytree.Deprel
 import com.kotlinnlp.simplednn.core.functionalities.activations.Softmax
 import com.kotlinnlp.simplednn.core.layers.LayerInterface
@@ -20,12 +21,12 @@ import java.io.Serializable
  *
  * @property tokenEncodingSize the size of the token encoding vectors
  * @property deprels the dictionary set of all possible deprels
- * @property lossCriterion the training mode
+ * @property lossCriterionType the training mode
  */
 class DeprelLabelerModel(
   val tokenEncodingSize: Int,
   val deprels: DictionarySet<Deprel>,
-  val lossCriterion: LossCriterion
+  val lossCriterionType: LossCriterionType
 ) : Serializable {
 
   /**
@@ -39,9 +40,9 @@ class DeprelLabelerModel(
       size = this.deprels.size,
       dropout = 0.0,
       connectionType = LayerType.Connection.Feedforward,
-      activationFunction = when (this.lossCriterion) {
-        LossCriterion.Softmax -> Softmax()
-        LossCriterion.HingeLoss -> null
+      activationFunction = when (this.lossCriterionType) {
+        LossCriterionType.Softmax -> Softmax()
+        LossCriterionType.HingeLoss -> null
       })
   )
 }

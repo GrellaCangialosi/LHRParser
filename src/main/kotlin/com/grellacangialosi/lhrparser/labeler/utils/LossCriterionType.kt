@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.labeler
+package com.grellacangialosi.lhrparser.labeler.utils
 
 /**
- * The training mode of the labeler.
+ * The available loss criterion.
  *
- * @property Softmax activate the output with a Softmax function and calculate the errors as mean errors
- * @property HingeLoss don't activate the output and calculate the errors with the hinge loss method
+ * @property Softmax calculate the errors with cross-entropy softmax
+ * @property HingeLoss calculate the errors with the hinge loss method
  */
-enum class LossCriterion { Softmax, HingeLoss }
+enum class LossCriterionType { Softmax, HingeLoss }

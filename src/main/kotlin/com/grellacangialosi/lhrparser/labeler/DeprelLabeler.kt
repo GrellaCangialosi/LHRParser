@@ -8,10 +8,9 @@
 package com.grellacangialosi.lhrparser.labeler
 
 import com.grellacangialosi.lhrparser.LatentSyntacticStructure
+import com.grellacangialosi.lhrparser.labeler.utils.LossCriterion
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.dependencytree.Deprel
-import com.kotlinnlp.simplednn.core.functionalities.losses.SoftmaxCrossEntropyCalculator
-import com.kotlinnlp.simplednn.core.functionalities.losses.getErrorsByHingeLoss
 import com.kotlinnlp.simplednn.core.neuralprocessor.batchfeedforward.BatchFeedforwardProcessor
 import com.kotlinnlp.simplednn.simplemath.ndarray.Shape
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
@@ -171,28 +170,12 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
       val goldDeprel: Deprel = goldDeprels[tokenId]!!
       val goldDeprelIndex: Int = this.model.deprels.getId(goldDeprel)!!
 
-      errorsList.add(
-        this.getPredictionErrors(prediction = prediction.deprels, goldIndex = goldDeprelIndex)
-      )
+      errorsList.add(LossCriterion(this.model.lossCriterionType).getPredictionErrors(
+        prediction = prediction.deprels, goldIndex = goldDeprelIndex))
     }
 
     return errorsList
   }
-
-  /**
-   * @param prediction a prediction array
-   * @param goldIndex the index of the gold value
-   *
-   * @return the errors of the given prediction
-   */
-  private fun getPredictionErrors(prediction: DenseNDArray, goldIndex: Int): DenseNDArray =
-    when (this.model.lossCriterion) {
-      LossCriterion.Softmax ->
-        SoftmaxCrossEntropyCalculator().calculateErrors(output = prediction, goldIndex = goldIndex)
-
-      LossCriterion.HingeLoss ->
-        getErrorsByHingeLoss(prediction = prediction, goldIndex = goldIndex)
-    }
 
   /**
    * @param deprelId a deprel id
