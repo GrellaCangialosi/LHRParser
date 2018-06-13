@@ -100,7 +100,7 @@ class LHRTrainer(
    * The builder of the labeler.
    */
   private val deprelLabelerBuilder: DeprelLabelerBuilder? = this.parser.model.labelerModel?.let {
-    DeprelLabelerBuilder(model = it, rootVector = this.virtualRoot)
+    DeprelLabelerBuilder(model = it)
   }
 
   /**
@@ -268,10 +268,7 @@ class LHRTrainer(
 
     val labeler: DeprelLabeler? = this.deprelLabelerBuilder?.invoke()
 
-    labeler?.predict( // important to calculate the right errors
-      tokens = sentence.tokens,
-      tokensHeads = goldTree.heads,
-      tokensVectors = lss.contextVectors)
+    labeler?.predict(lss, goldTree.heads) // important to calculate the right errors
 
     val headsPointer: HeadsPointer? = null // HeadsPointer(this.pointerNetwork) // TODO: fix
 

@@ -7,8 +7,8 @@
 
 package com.grellacangialosi.lhrparser.labeler
 
+import com.grellacangialosi.lhrparser.LatentSyntacticStructure
 import com.kotlinnlp.dependencytree.DependencyTree
-import com.kotlinnlp.neuralparser.language.Token
 import com.kotlinnlp.dependencytree.Deprel
 import com.kotlinnlp.simplednn.core.functionalities.losses.SoftmaxCrossEntropyCalculator
 import com.kotlinnlp.simplednn.core.functionalities.losses.getErrorsByHingeLoss
@@ -19,9 +19,8 @@ import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 
 /**
  * @param model the model of this labeler
- * @param rootVector the vector that represents the root token
  */
-class DeprelLabeler(private val model: DeprelLabelerModel, private val rootVector: DenseNDArray) {
+class DeprelLabeler(private val model: DeprelLabelerModel) {
 
   /**
    * The outcome of a single prediction of the labeler.
@@ -46,21 +45,18 @@ class DeprelLabeler(private val model: DeprelLabelerModel, private val rootVecto
   private lateinit var lastPredictions: List<Prediction>
 
   /**
-   * Assign the Deprel and POS tag labels.
+   * Assign the Deprel labels.
    *
-   * @param tokens a list of [Token]
-   * @param tokensVectors the vectors that represent each token
+   * @param lss the latent syntactic structure
    * @param dependencyTree the dependency tree
    */
-  fun assignLabels(tokens: List<Token>, tokensVectors: List<DenseNDArray>, dependencyTree: DependencyTree) {
+  fun assignLabels(lss: LatentSyntacticStructure, dependencyTree: DependencyTree) {
 
     val labelerPredictions = this.predict(
-      tokens = tokens,
-      tokensHeads = dependencyTree.heads,
-      tokensVectors = tokensVectors)
+      lss = lss,
+      tokensHeads = dependencyTree.heads)
 
     labelerPredictions.forEachIndexed { tokenId, prediction ->
-
       dependencyTree.setDeprel(tokenId, this.getDeprel(prediction.deprels.argMaxIndex()))
     }
   }
@@ -68,20 +64,20 @@ class DeprelLabeler(private val model: DeprelLabelerModel, private val rootVecto
   /**
    * Predict the deprel and the POS tag for each token.
    *
-   * @param tokens a list of [Token]
+   * @param lss the latent syntactic structure
    * @param tokensHeads the array containing the head id of each token (the null value represents the root)
-   * @param tokensVectors the vectors that represent each token
    *
    * @return a list of predictions, one for each token
    */
-  fun predict(tokens: List<Token>, tokensHeads: Array<Int?>, tokensVectors: List<DenseNDArray>): List<Prediction> {
+  fun predict(lss: LatentSyntacticStructure, tokensHeads: Array<Int?>): List<Prediction> {
 
     this.initialize()
 
     this.lastTokensHeads = tokensHeads
 
-    val outputList: List<DenseNDArray> = this.processor.forward(ArrayList(
-      this.extractFeatures(tokens = tokens, tokensVectors = tokensVectors, tokensHeads = tokensHeads).map { it.toList() }))
+    val features = this.extractFeatures(lss, tokensHeads)
+
+    val outputList: List<DenseNDArray> = this.processor.forward(ArrayList(features))
 
     this.lastPredictions = outputList.map { Prediction(deprels = it) }
 
@@ -111,16 +107,16 @@ class DeprelLabeler(private val model: DeprelLabelerModel, private val rootVecto
 
     inputErrors.forEachIndexed { dependentId, vectorErrors ->
 
-        val governorId: Int? = this.lastTokensHeads[dependentId]
+      val governorId: Int? = this.lastTokensHeads[dependentId]
 
-        errors[dependentId].assignSum(vectorErrors[0])
+      errors[dependentId].assignSum(vectorErrors[0])
 
-        if (governorId != null) {
-          errors[governorId].assignSum(vectorErrors[1])
-        } else {
-          rootErrors = vectorErrors[1]
-        }
+      if (governorId != null) {
+        errors[governorId].assignSum(vectorErrors[1])
+      } else {
+        rootErrors = vectorErrors[1]
       }
+    }
 
     return Pair(errors, rootErrors)
   }
@@ -141,23 +137,21 @@ class DeprelLabeler(private val model: DeprelLabelerModel, private val rootVecto
   /**
    * Extract for each token the features to predict its dependency relation.
    *
-   * @param tokens a list of [Token]
+   * @param lss the latent syntactic structure
    * @param tokensHeads the array containing the head id of each token (the null value represents the root)
-   * @param tokensVectors the vectors that represent each token
    *
    * @return a list of features
    */
-  private fun extractFeatures(tokens: List<Token>,
-                              tokensHeads: Array<Int?>,
-                              tokensVectors: List<DenseNDArray>): List<List<DenseNDArray>> {
+  private fun extractFeatures(lss: LatentSyntacticStructure,
+                              tokensHeads: Array<Int?>): List<List<DenseNDArray>> {
 
     val features = mutableListOf<List<DenseNDArray>>()
 
-    tokens.map { it.id }.zip(tokensHeads).forEach { (dependentId, headId) ->
+    lss.tokens.map { it.id }.zip(tokensHeads).forEach { (dependentId, headId) ->
 
-      val encodedHead: DenseNDArray = headId?.let { tokensVectors[it] } ?: this.rootVector
+      val encodedHead: DenseNDArray = headId?.let { lss.contextVectors[it] } ?: lss.virtualRoot
 
-      features.add(listOf(tokensVectors[dependentId], encodedHead))
+      features.add(listOf(lss.contextVectors[dependentId], encodedHead))
     }
 
     return features

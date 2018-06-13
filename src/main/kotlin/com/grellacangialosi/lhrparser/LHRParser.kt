@@ -57,7 +57,7 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
    * The builder of the labeler.
    */
   private val deprelLabelerBuilder: DeprelLabelerBuilder? = this.model.labelerModel?.let {
-    DeprelLabelerBuilder(model = it, rootVector = this.virtualRoot)
+    DeprelLabelerBuilder(model = it)
   }
 
   /**
@@ -149,9 +149,6 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
 
     val labeler: DeprelLabeler? = this@LHRParser.deprelLabelerBuilder?.invoke()
 
-    labeler?.assignLabels(
-      tokens = lss.tokens,
-      tokensVectors = lss.contextVectors,
-      dependencyTree = dependencyTree)
+    labeler?.assignLabels(lss, dependencyTree)
   }
 }
