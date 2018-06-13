@@ -80,7 +80,6 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
     val lss = encoder.encode(sentence.tokens)
 
     val scores: ArcScores = HeadsDecoder().decode(lss)
-    // val scores: ArcScores = HeadsPredictor().decode(lss) // TODO: to try
     //val scores2: ArcScores = HeadsPointer(this.pointerNetwork).decode(lss) // TODO: to try
 
     return this.buildDependencyTree(lss, scores)
