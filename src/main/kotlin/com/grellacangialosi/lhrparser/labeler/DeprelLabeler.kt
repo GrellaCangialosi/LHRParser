@@ -102,16 +102,16 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
     val errors = List(size = inputErrors.size, init = { DenseNDArrayFactory.zeros(Shape(contextVectorsSize)) })
     lateinit var rootErrors: DenseNDArray
 
-    inputErrors.forEachIndexed { dependentId, vectorErrors ->
+    inputErrors.forEachIndexed { dependentId, (dependentErrors, governorErrors) ->
+
+      errors[dependentId].assignSum(dependentErrors)
 
       val governorId: Int? = this.lastTokensHeads[dependentId]
 
-      errors[dependentId].assignSum(vectorErrors[0])
-
       if (governorId != null) {
-        errors[governorId].assignSum(vectorErrors[1])
+        errors[governorId].assignSum(governorErrors)
       } else {
-        rootErrors = vectorErrors[1]
+        rootErrors = governorErrors
       }
     }
 
