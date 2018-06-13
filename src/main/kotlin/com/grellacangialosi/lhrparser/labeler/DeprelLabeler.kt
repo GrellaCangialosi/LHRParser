@@ -22,6 +22,13 @@ import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 class DeprelLabeler(private val model: DeprelLabelerModel) {
 
   /**
+   * The input errors of this labeler.
+   */
+  class InputErrors (
+    val rootErrors: DenseNDArray,
+    val contextErrors: List<DenseNDArray>)
+
+  /**
    * The outcome of a single prediction of the labeler.
    *
    * @property deprels the deprels prediction
@@ -95,27 +102,31 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
   /**
    * @return the input errors and the root errors
    */
-  fun getInputErrors(): Pair<List<DenseNDArray>, DenseNDArray> {
+  fun getInputErrors(): InputErrors {
 
     val inputErrors: List<List<DenseNDArray>> = this.processor.getInputsErrors(copy = false)
-    val contextVectorsSize: Int = this.model.networkModel.inputsSize[0] // [dependent, governor] as input
-    val errors = List(size = inputErrors.size, init = { DenseNDArrayFactory.zeros(Shape(contextVectorsSize)) })
+
+    val contextErrors = List(size = inputErrors.size, init = {
+      DenseNDArrayFactory.zeros(Shape(this.model.contextEncodingSize))
+    })
+
     lateinit var rootErrors: DenseNDArray
 
-    inputErrors.forEachIndexed { dependentId, (dependentErrors, governorErrors) ->
+    inputErrors.forEachIndexed {
+      dependentId, (contextDependentErrors, contextGovernorErrors) ->
 
-      errors[dependentId].assignSum(dependentErrors)
+      contextErrors[dependentId].assignSum(contextDependentErrors)
 
       val governorId: Int? = this.lastTokensHeads[dependentId]
 
       if (governorId != null) {
-        errors[governorId].assignSum(governorErrors)
+        contextErrors[governorId].assignSum(contextGovernorErrors)
       } else {
-        rootErrors = governorErrors
+        rootErrors = contextGovernorErrors
       }
     }
 
-    return Pair(errors, rootErrors)
+    return InputErrors(rootErrors = rootErrors, contextErrors = contextErrors)
   }
 
   /**
@@ -146,9 +157,9 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
 
     lss.tokens.map { it.id }.zip(tokensHeads).forEach { (dependentId, headId) ->
 
-      val encodedHead: DenseNDArray = headId?.let { lss.contextVectors[it] } ?: lss.virtualRoot
-
-      features.add(listOf(lss.contextVectors[dependentId], encodedHead))
+      features.add(listOf(
+        lss.contextVectors[dependentId],
+        headId?.let { lss.contextVectors[it] } ?: lss.virtualRoot))
     }
 
     return features
