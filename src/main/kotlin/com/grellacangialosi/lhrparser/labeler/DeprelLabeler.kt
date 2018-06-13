@@ -149,15 +149,15 @@ class DeprelLabeler(private val model: DeprelLabelerModel, private val rootVecto
    */
   private fun extractFeatures(tokens: List<Token>,
                               tokensHeads: Array<Int?>,
-                              tokensVectors: List<DenseNDArray>): List<Pair<DenseNDArray, DenseNDArray>> {
+                              tokensVectors: List<DenseNDArray>): List<List<DenseNDArray>> {
 
-    val features = mutableListOf<Pair<DenseNDArray, DenseNDArray>>()
+    val features = mutableListOf<List<DenseNDArray>>()
 
     tokens.map { it.id }.zip(tokensHeads).forEach { (dependentId, headId) ->
 
       val encodedHead: DenseNDArray = headId?.let { tokensVectors[it] } ?: this.rootVector
 
-      features.add(Pair(tokensVectors[dependentId], encodedHead))
+      features.add(listOf(tokensVectors[dependentId], encodedHead))
     }
 
     return features
