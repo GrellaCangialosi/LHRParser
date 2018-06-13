@@ -11,7 +11,7 @@ import com.kotlinnlp.simplednn.core.functionalities.losses.SoftmaxCrossEntropyCa
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 
 /**
- *
+ * The loss criterion that calculates the errors with the cross-entropy softmax.
  */
 class Softmax : LossCriterion {
 

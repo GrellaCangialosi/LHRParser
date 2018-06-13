@@ -11,7 +11,7 @@ import com.kotlinnlp.simplednn.core.functionalities.losses.getErrorsByHingeLoss
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 
 /**
- *
+ * The loss criterion that calculates the errors with the hinge loss method.
  */
 class HingeLoss : LossCriterion {
 

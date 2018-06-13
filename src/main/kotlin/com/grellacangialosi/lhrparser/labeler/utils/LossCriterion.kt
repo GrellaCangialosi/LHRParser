@@ -9,6 +9,9 @@ package com.grellacangialosi.lhrparser.labeler.utils
 
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 
+/**
+ * The LossCriterion interface.
+ */
 interface LossCriterion {
 
   companion object {
