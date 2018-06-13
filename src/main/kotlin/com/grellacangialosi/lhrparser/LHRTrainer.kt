@@ -30,6 +30,7 @@ import com.kotlinnlp.simplednn.core.functionalities.updatemethods.adam.ADAMMetho
 import com.kotlinnlp.simplednn.core.optimizer.ParamsOptimizer
 import com.kotlinnlp.simplednn.simplemath.assignSum
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
+import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 import com.kotlinnlp.simplednn.utils.scheduling.BatchScheduling
 import com.kotlinnlp.simplednn.utils.scheduling.EpochScheduling
 import com.kotlinnlp.simplednn.utils.scheduling.ExampleScheduling
@@ -133,6 +134,11 @@ class LHRTrainer(
   private val pointerNetwork = PointerNetworkProcessor(this.parser.model.pointerNetworkModel)
 
   /**
+   * The epoch counter.
+   */
+  var epochCount: Int = 0
+
+  /**
    * The heads pointer optimizer.
    * TODO: fix usage
    */
@@ -181,6 +187,8 @@ class LHRTrainer(
     if (this.updateMethod is EpochScheduling) {
       this.updateMethod.newEpoch()
     }
+
+    this.epochCount++
   }
 
   /**
@@ -347,11 +355,14 @@ class LHRTrainer(
     headsPointer: HeadsPointer?,
     labeler: DeprelLabeler?){
 
+
+    val contextErrors = List(size = errors.size, init = { DenseNDArrayFactory.zeros(errors[0].shape) } )
+
     headsPointer?.let {
       errors.assignSum(headsPointer.getLatentHeadsErrors()) // // TODO: to refactor
     }
 
-    val contextErrors = encoder.headsEncoder.propagateErrors(errors)
+    contextErrors.assignSum(encoder.headsEncoder.propagateErrors(errors))
 
     headsPointer?.let {
       contextErrors.assignSum(headsPointer.getContextVectorsErrors()) // TODO: to refactor
