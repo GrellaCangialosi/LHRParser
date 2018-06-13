@@ -42,8 +42,9 @@ class HeadsDecoder : LSSDecoder {
    */
   override fun decode(lss: LatentSyntacticStructure): ArcScores {
 
-   this.lssNorm = LatentSyntacticStructure(
+    this.lssNorm = LatentSyntacticStructure(
       tokens = lss.tokens,
+      tokensEncoding = lss.tokensEncoding,
       contextVectors = lss.contextVectors.map { it.normalize() },
       latentHeads = lss.latentHeads.map { it.normalize() },
       virtualRoot = lss.virtualRoot.normalize())
