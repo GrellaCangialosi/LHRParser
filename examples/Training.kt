@@ -218,7 +218,7 @@ fun buildTokensEncoderModel(parsedArgs: TrainingArgs,
         lexiconDictionary = lexiconDictionary,
         featuresDictionary = featuresDictionary,
         tokenEncodingSize = parsedArgs.wordEmbeddingSize,
-        activation = ReLU())
+        activation = null)
     }
   }
 }
