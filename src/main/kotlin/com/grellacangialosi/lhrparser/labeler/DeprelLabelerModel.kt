@@ -10,6 +10,7 @@ package com.grellacangialosi.lhrparser.labeler
 import com.grellacangialosi.lhrparser.labeler.utils.LossCriterionType
 import com.kotlinnlp.dependencytree.Deprel
 import com.kotlinnlp.simplednn.core.functionalities.activations.Softmax
+import com.kotlinnlp.simplednn.core.functionalities.activations.Tanh
 import com.kotlinnlp.simplednn.core.layers.LayerInterface
 import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.simplednn.core.neuralnetwork.NeuralNetwork
@@ -39,6 +40,10 @@ class DeprelLabelerModel(
       size = 2 * this.contextEncodingSize,
       connectionType = LayerType.Connection.Concat,
       dropout = 0.2),
+    LayerInterface(
+      size = this.contextEncodingSize,
+      connectionType = LayerType.Connection.LSTM,
+      activationFunction = Tanh()),
     LayerInterface(
       type = LayerType.Input.Dense,
       size = this.deprels.size,

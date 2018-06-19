@@ -11,7 +11,7 @@ import com.grellacangialosi.lhrparser.LatentSyntacticStructure
 import com.grellacangialosi.lhrparser.labeler.utils.LossCriterion
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.dependencytree.Deprel
-import com.kotlinnlp.simplednn.core.neuralprocessor.batchfeedforward.BatchFeedforwardProcessor
+import com.kotlinnlp.simplednn.core.neuralprocessor.recurrent.RecurrentNeuralProcessor
 import com.kotlinnlp.simplednn.simplemath.ndarray.Shape
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
@@ -38,7 +38,7 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
   /**
    * The processor that classify the deprels.
    */
-  private val processor = BatchFeedforwardProcessor<DenseNDArray>(this.model.networkModel)
+  private val processor = RecurrentNeuralProcessor<DenseNDArray>(this.model.networkModel)
 
   /**
    * The tokens heads used for the last predictions done.
@@ -79,9 +79,11 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
 
     this.lastTokensHeads = tokensHeads
 
-    val features = this.extractFeatures(lss, tokensHeads)
+    val features: ArrayList<List<DenseNDArray>> = ArrayList(this.extractFeatures(lss, tokensHeads))
 
-    val outputList: List<DenseNDArray> = this.processor.forward(ArrayList(features))
+    this.processor.forward((features))
+
+    val outputList: List<DenseNDArray> = this.processor.getOutputSequence()
 
     this.lastPredictions = outputList.map { Prediction(deprels = it) }
 
@@ -96,7 +98,7 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
    */
   fun backward(goldDeprels: Array<Deprel?>) {
 
-    this.processor.backward(outputErrors = this.getPredictionsErrors(goldDeprels = goldDeprels), propagateToInput = true)
+    this.processor.backward(this.getPredictionsErrors(goldDeprels = goldDeprels), propagateToInput = true)
   }
 
   /**
