@@ -263,7 +263,7 @@ class LHRTrainer(
     val encoder: LSSEncoder = this.buildEncoder()
     val lss: LatentSyntacticStructure = encoder.encode(sentence.tokens)
 
-    labeler?.predict(lss, goldTree.heads) // important to calculate the right errors
+    labeler?.predict(lss, goldTree) // important to calculate the right errors
 
     val latentHeadsErrors = MSECalculator().calculateErrors(
       outputSequence = lss.latentHeads,

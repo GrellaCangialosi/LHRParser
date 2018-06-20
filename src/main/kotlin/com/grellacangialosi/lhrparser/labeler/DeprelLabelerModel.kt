@@ -13,6 +13,8 @@ import com.kotlinnlp.simplednn.core.functionalities.activations.Softmax
 import com.kotlinnlp.simplednn.core.layers.LayerInterface
 import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.simplednn.core.neuralnetwork.NeuralNetwork
+import com.kotlinnlp.simplednn.simplemath.ndarray.Shape
+import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 import com.kotlinnlp.utils.DictionarySet
 import java.io.Serializable
 
@@ -30,13 +32,24 @@ class DeprelLabelerModel(
 ) : Serializable {
 
   /**
+   * The [adding ]vector that represents a null token.
+   */
+  val paddingVector = DenseNDArrayFactory.zeros(Shape(this.contextEncodingSize))
+
+  /**
    * The Network model that predicts the Deprels
    */
   val networkModel: NeuralNetwork = NeuralNetwork(
     // [contextDependent, contextGovernor]
-    LayerInterface(sizes = listOf(this.contextEncodingSize, this.contextEncodingSize)),
+    LayerInterface(sizes = listOf(
+      this.contextEncodingSize,
+      this.contextEncodingSize,
+      this.contextEncodingSize,
+      this.contextEncodingSize,
+      this.contextEncodingSize,
+      this.contextEncodingSize)),
     LayerInterface(
-      size = 2 * this.contextEncodingSize,
+      size = 6 * this.contextEncodingSize,
       connectionType = LayerType.Connection.Concat,
       dropout = 0.2),
     LayerInterface(

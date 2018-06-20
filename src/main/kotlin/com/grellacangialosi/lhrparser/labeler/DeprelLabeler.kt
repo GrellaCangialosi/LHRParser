@@ -41,9 +41,9 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
   private val processor = BatchFeedforwardProcessor<DenseNDArray>(this.model.networkModel)
 
   /**
-   * The tokens heads used for the last predictions done.
+   * The dependency tree used for the last predictions done.
    */
-  private lateinit var lastTokensHeads: Array<Int?>
+  private lateinit var dependencyTree: DependencyTree
 
   /**
    * The last predictions done.
@@ -58,7 +58,7 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
    */
   fun assignLabels(lss: LatentSyntacticStructure, dependencyTree: DependencyTree) {
 
-    val labelerPredictions = this.predict(lss, dependencyTree.heads)
+    val labelerPredictions = this.predict(lss, dependencyTree)
 
     labelerPredictions.forEachIndexed { tokenId, prediction ->
       dependencyTree.setDeprel(tokenId, this.getDeprel(prediction.deprels.argMaxIndex()))
@@ -69,17 +69,17 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
    * Predict the deprel and the POS tag for each token.
    *
    * @param lss the latent syntactic structure
-   * @param tokensHeads the array containing the head id of each token (the null value represents the root)
+   * @param dependencyTree the dependency tree
    *
    * @return a list of predictions, one for each token
    */
-  fun predict(lss: LatentSyntacticStructure, tokensHeads: Array<Int?>): List<Prediction> {
+  fun predict(lss: LatentSyntacticStructure, dependencyTree: DependencyTree): List<Prediction> {
 
     this.initialize()
 
-    this.lastTokensHeads = tokensHeads
+    this.dependencyTree = dependencyTree
 
-    val features = this.extractFeatures(lss, tokensHeads)
+    val features = this.extractFeatures(lss, dependencyTree)
 
     val outputList: List<DenseNDArray> = this.processor.forward(ArrayList(features))
 
@@ -112,15 +112,60 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
 
     lateinit var rootErrors: DenseNDArray
 
-    inputErrors.forEachIndexed {
-      dependentId, (contextDependentErrors, contextGovernorErrors) ->
+    /*
+          val depLeftMostChildId: Int? = if (dependencyTree.leftDependents[dependentId].isNotEmpty())
+        dependencyTree.leftDependents[dependentId].first()
+      else
+        null
+
+      val depRightMostChildId: Int? = if (dependencyTree.rightDependents[dependentId].isNotEmpty())
+        dependencyTree.rightDependents[dependentId].last()
+      else
+        null
+
+      val govLeftMostChildId: Int? = if (headId != null && dependencyTree.leftDependents[headId].isNotEmpty())
+        dependencyTree.leftDependents[headId].first()
+      else
+        null
+
+      val govRightMostChildId: Int? = if (headId != null && dependencyTree.rightDependents[headId].isNotEmpty())
+        dependencyTree.rightDependents[headId].last()
+      else
+        null
+
+     */
+    inputErrors.forEachIndexed { dependentId, errorsList ->
+
+      val contextDependentErrors = errorsList[0]
+      val contextGovernorErrors = errorsList[1]
+      val depLeftMostChildErrors = errorsList[2]
+      val depRightMostChildErrors = errorsList[3]
+      val govLeftMostChildErrors = errorsList[4]
+      val govRightMostChildErrors = errorsList[5]
 
       contextErrors[dependentId].assignSum(contextDependentErrors)
 
-      val governorId: Int? = this.lastTokensHeads[dependentId]
+      if (this.dependencyTree.leftDependents[dependentId].isNotEmpty()) {
+        contextErrors[this.dependencyTree.leftDependents[dependentId].first()].assignSum(depLeftMostChildErrors)
+      }
+
+      if (this.dependencyTree.rightDependents[dependentId].isNotEmpty()) {
+        contextErrors[this.dependencyTree.rightDependents[dependentId].first()].assignSum(depRightMostChildErrors)
+      }
+
+      val governorId: Int? = this.dependencyTree.heads[dependentId]
 
       if (governorId != null) {
         contextErrors[governorId].assignSum(contextGovernorErrors)
+
+        if (this.dependencyTree.leftDependents[governorId].isNotEmpty()) {
+          contextErrors[this.dependencyTree.leftDependents[governorId].first()].assignSum(govLeftMostChildErrors)
+        }
+
+        if (this.dependencyTree.rightDependents[governorId].isNotEmpty()) {
+          contextErrors[this.dependencyTree.rightDependents[governorId].first()].assignSum(govRightMostChildErrors)
+        }
+
       } else {
         rootErrors = contextGovernorErrors
       }
@@ -146,20 +191,45 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
    * Extract for each token the features to predict its dependency relation.
    *
    * @param lss the latent syntactic structure
-   * @param tokensHeads the array containing the head id of each token (the null value represents the root)
+   * @param dependencyTree the dependency tree
    *
    * @return a list of features
    */
   private fun extractFeatures(lss: LatentSyntacticStructure,
-                              tokensHeads: Array<Int?>): List<List<DenseNDArray>> {
+                              dependencyTree: DependencyTree): List<List<DenseNDArray>> {
 
     val features = mutableListOf<List<DenseNDArray>>()
 
-    lss.tokens.map { it.id }.zip(tokensHeads).forEach { (dependentId, headId) ->
+    lss.tokens.map { it.id }.zip(dependencyTree.heads).forEach { (dependentId, headId) ->
+
+      val depLeftMostChildId: Int? = if (dependencyTree.leftDependents[dependentId].isNotEmpty())
+        dependencyTree.leftDependents[dependentId].first()
+      else
+        null
+
+      val depRightMostChildId: Int? = if (dependencyTree.rightDependents[dependentId].isNotEmpty())
+        dependencyTree.rightDependents[dependentId].last()
+      else
+        null
+
+      val govLeftMostChildId: Int? = if (headId != null && dependencyTree.leftDependents[headId].isNotEmpty())
+        dependencyTree.leftDependents[headId].first()
+      else
+        null
+
+      val govRightMostChildId: Int? = if (headId != null && dependencyTree.rightDependents[headId].isNotEmpty())
+        dependencyTree.rightDependents[headId].last()
+      else
+        null
 
       features.add(listOf(
         lss.contextVectors[dependentId],
-        headId?.let { lss.contextVectors[it] } ?: lss.virtualRoot))
+        headId?.let { lss.contextVectors[it] } ?: lss.virtualRoot,
+        depLeftMostChildId?.let { lss.contextVectors[it] } ?: this.model.paddingVector ,
+        depRightMostChildId?.let { lss.contextVectors[it] } ?: this.model.paddingVector,
+        govLeftMostChildId?.let { lss.contextVectors[it] } ?: this.model.paddingVector,
+        govRightMostChildId?.let { lss.contextVectors[it] } ?: this.model.paddingVector
+      ))
     }
 
     return features
