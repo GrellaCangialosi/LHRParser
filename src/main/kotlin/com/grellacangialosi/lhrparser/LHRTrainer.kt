@@ -7,7 +7,6 @@
 
 package com.grellacangialosi.lhrparser
 
-import com.grellacangialosi.lhrparser.decoders.HeadsPointer
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoder
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderBuilder
 import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderOptimizer
@@ -22,11 +21,9 @@ import com.kotlinnlp.dependencytree.POSTag
 import com.kotlinnlp.neuralparser.helpers.Trainer
 import com.kotlinnlp.neuralparser.helpers.Validator
 import com.kotlinnlp.neuralparser.language.Sentence
-import com.kotlinnlp.simplednn.deeplearning.attention.pointernetwork.PointerNetworkProcessor
 import com.kotlinnlp.simplednn.core.functionalities.losses.MSECalculator
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.adam.ADAMMethod
-import com.kotlinnlp.simplednn.core.optimizer.ParamsOptimizer
 import com.kotlinnlp.simplednn.simplemath.assignSum
 import com.kotlinnlp.simplednn.simplemath.ndarray.Shape
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
@@ -129,22 +126,9 @@ class LHRTrainer(
     model = this.parser.model.tokensEncoderModel, updateMethod = this.updateMethod)
 
   /**
-   * The pointer network.
-   */
-  private val pointerNetwork = PointerNetworkProcessor(this.parser.model.pointerNetworkModel)
-
-  /**
    * The epoch counter.
    */
   var epochCount: Int = 0
-
-  /**
-   * The heads pointer optimizer.
-   * TODO: fix usage
-   */
-  private val headsPointerOptimizer = ParamsOptimizer(
-    params = this.parser.model.pointerNetworkModel.params,
-    updateMethod = updateMethod)
 
   /**
    * Group the optimizers all together.
@@ -153,8 +137,7 @@ class LHRTrainer(
     this.headsEncoderOptimizer,
     this.contextEncoderOptimizer,
     this.deprelLabelerOptimizer,
-    this.tokensEncoderOptimizer,
-    this.headsPointerOptimizer)
+    this.tokensEncoderOptimizer)
 
   /**
    * @return a string representation of the configuration of this Trainer
@@ -269,20 +252,11 @@ class LHRTrainer(
       outputSequence = lss.latentHeads,
       outputGoldSequence = this.getExpectedLatentHeads(lss, goldTree.heads))
 
-    val headsPointer: HeadsPointer? = null // HeadsPointer(this.pointerNetwork) // TODO: fix
-
-    // TODO: to refactor
-    headsPointer?.let {
-      it.learn(lss, goldTree.heads)
-      this.headsPointerOptimizer.accumulate(it.getParamsErrors(copy = false))
-    }
-
     this.propagateErrors(
       errors = latentHeadsErrors,
       goldTree = goldTree,
       goldPosTags = goldPosTags ?: goldTree.posTags,
       encoder = encoder,
-      headsPointer = headsPointer,
       labeler = labeler)
   }
 
@@ -320,7 +294,6 @@ class LHRTrainer(
    * @param goldTree the gold dependency tree
    * @param goldPosTags the gold pos-tags
    * @param encoder the encoder of the latent syntactic structure
-   * @param headsPointer the heads pointer
    * @param labeler the labeler
    */
   private fun propagateErrors(
@@ -328,7 +301,6 @@ class LHRTrainer(
     goldTree: DependencyTree,
     goldPosTags: Array<POSTag?>?,
     encoder: LSSEncoder,
-    headsPointer: HeadsPointer?,
     labeler: DeprelLabeler?){
 
     val contextErrors = List(size = errors.size, init = { DenseNDArrayFactory.zeros(errors[0].shape) } )
@@ -337,17 +309,7 @@ class LHRTrainer(
       DenseNDArrayFactory.zeros(Shape(this.parser.model.tokensEncoderModel.tokenEncodingSize))
     } )
 
-    /*
-    headsPointer?.let {
-      errors.assignSum(headsPointer.getLatentHeadsErrors()) // TODO: to refactor
-    }
-    */
-
     contextErrors.assignSum(encoder.headsEncoder.propagateErrors(errors))
-
-    headsPointer?.let {
-      contextErrors.assignSum(headsPointer.getContextVectorsErrors()) // TODO: to refactor
-    }
 
     labeler?.propagateErrors(goldTree)?.let { labelerInputErrors ->
       contextErrors.assignSum(labelerInputErrors.contextErrors)
