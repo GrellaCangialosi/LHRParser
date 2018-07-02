@@ -51,21 +51,6 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
   private lateinit var lastPredictions: List<Prediction>
 
   /**
-   * Assign the Deprel labels.
-   *
-   * @param lss the latent syntactic structure
-   * @param dependencyTree the dependency tree
-   */
-  fun assignLabels(lss: LatentSyntacticStructure, dependencyTree: DependencyTree) {
-
-    val labelerPredictions = this.predict(lss, dependencyTree)
-
-    labelerPredictions.forEachIndexed { tokenId, prediction ->
-      dependencyTree.setDeprel(tokenId, this.getDeprel(prediction.deprels.argMaxIndex()))
-    }
-  }
-
-  /**
    * Predict the deprel and the POS tag for each token.
    *
    * @param lss the latent syntactic structure
@@ -178,9 +163,9 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
   }
 
   /**
-   * @param deprelId a deprel id
+   * @param index a prediction index
    *
-   * @return the [Deprel] of the given [deprelId]
+   * @return the [Deprel] corrisponding to the given [index]
    */
-  private fun getDeprel(deprelId: Int) = this.model.deprels.getElement(deprelId)!!
+  fun getDeprel(index: Int) = this.model.deprels.getElement(index)!!
 }

@@ -149,6 +149,10 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
 
     val labeler: DeprelLabeler? = this@LHRParser.deprelLabelerBuilder?.invoke()
 
-    labeler?.assignLabels(lss, dependencyTree)
+    labeler?.let {
+      it.predict(lss, dependencyTree).forEachIndexed { tokenId, prediction ->
+        dependencyTree.setDeprel(tokenId, it.getDeprel(prediction.deprels.argMaxIndex()))
+      }
+    }
   }
 }
