@@ -111,7 +111,7 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
       }
 
       if (this.dependencyTree.rightDependents[dependentId].isNotEmpty()) {
-        contextErrors[this.dependencyTree.rightDependents[dependentId].first()].assignSum(depRightMostChildErrors)
+        contextErrors[this.dependencyTree.rightDependents[dependentId].last()].assignSum(depRightMostChildErrors)
       }
 
       val governorId: Int? = this.dependencyTree.heads[dependentId]
