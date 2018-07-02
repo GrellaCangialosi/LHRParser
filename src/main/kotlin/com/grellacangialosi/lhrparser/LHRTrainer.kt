@@ -269,7 +269,7 @@ class LHRTrainer(
       outputSequence = lss.latentHeads,
       outputGoldSequence = this.getExpectedLatentHeads(lss, goldTree.heads))
 
-    val headsPointer: HeadsPointer? = HeadsPointer(this.pointerNetwork) // TODO: fix
+    val headsPointer: HeadsPointer? = null // HeadsPointer(this.pointerNetwork) // TODO: fix
 
     // TODO: to refactor
     headsPointer?.let {
