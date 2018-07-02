@@ -79,7 +79,7 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
 
     this.dependencyTree = dependencyTree
 
-    val features = this.extractFeatures(lss, dependencyTree)
+    val features = FeaturesExtractor(lss, dependencyTree, this.model.paddingVector).extract()
 
     val outputList: List<DenseNDArray> = this.processor.forward(ArrayList(features))
 
@@ -112,36 +112,12 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
 
     lateinit var rootErrors: DenseNDArray
 
-    /*
-          val depLeftMostChildId: Int? = if (dependencyTree.leftDependents[dependentId].isNotEmpty())
-        dependencyTree.leftDependents[dependentId].first()
-      else
-        null
-
-      val depRightMostChildId: Int? = if (dependencyTree.rightDependents[dependentId].isNotEmpty())
-        dependencyTree.rightDependents[dependentId].last()
-      else
-        null
-
-      val govLeftMostChildId: Int? = if (headId != null && dependencyTree.leftDependents[headId].isNotEmpty())
-        dependencyTree.leftDependents[headId].first()
-      else
-        null
-
-      val govRightMostChildId: Int? = if (headId != null && dependencyTree.rightDependents[headId].isNotEmpty())
-        dependencyTree.rightDependents[headId].last()
-      else
-        null
-
-     */
     inputErrors.forEachIndexed { dependentId, errorsList ->
 
       val contextDependentErrors = errorsList[0]
       val contextGovernorErrors = errorsList[1]
       val depLeftMostChildErrors = errorsList[2]
       val depRightMostChildErrors = errorsList[3]
-      val govLeftMostChildErrors = errorsList[4]
-      val govRightMostChildErrors = errorsList[5]
 
       contextErrors[dependentId].assignSum(contextDependentErrors)
 
@@ -157,15 +133,6 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
 
       if (governorId != null) {
         contextErrors[governorId].assignSum(contextGovernorErrors)
-
-        if (this.dependencyTree.leftDependents[governorId].isNotEmpty()) {
-          contextErrors[this.dependencyTree.leftDependents[governorId].first()].assignSum(govLeftMostChildErrors)
-        }
-
-        if (this.dependencyTree.rightDependents[governorId].isNotEmpty()) {
-          contextErrors[this.dependencyTree.rightDependents[governorId].first()].assignSum(govRightMostChildErrors)
-        }
-
       } else {
         rootErrors = contextGovernorErrors
       }
@@ -186,54 +153,6 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
    * Initialize the labeler for the next sentence.
    */
   private fun initialize() { }
-
-  /**
-   * Extract for each token the features to predict its dependency relation.
-   *
-   * @param lss the latent syntactic structure
-   * @param dependencyTree the dependency tree
-   *
-   * @return a list of features
-   */
-  private fun extractFeatures(lss: LatentSyntacticStructure,
-                              dependencyTree: DependencyTree): List<List<DenseNDArray>> {
-
-    val features = mutableListOf<List<DenseNDArray>>()
-
-    lss.tokens.map { it.id }.zip(dependencyTree.heads).forEach { (dependentId, headId) ->
-
-      val depLeftMostChildId: Int? = if (dependencyTree.leftDependents[dependentId].isNotEmpty())
-        dependencyTree.leftDependents[dependentId].first()
-      else
-        null
-
-      val depRightMostChildId: Int? = if (dependencyTree.rightDependents[dependentId].isNotEmpty())
-        dependencyTree.rightDependents[dependentId].last()
-      else
-        null
-
-      val govLeftMostChildId: Int? = if (headId != null && dependencyTree.leftDependents[headId].isNotEmpty())
-        dependencyTree.leftDependents[headId].first()
-      else
-        null
-
-      val govRightMostChildId: Int? = if (headId != null && dependencyTree.rightDependents[headId].isNotEmpty())
-        dependencyTree.rightDependents[headId].last()
-      else
-        null
-
-      features.add(listOf(
-        lss.contextVectors[dependentId],
-        headId?.let { lss.contextVectors[it] } ?: lss.virtualRoot,
-        depLeftMostChildId?.let { lss.contextVectors[it] } ?: this.model.paddingVector ,
-        depRightMostChildId?.let { lss.contextVectors[it] } ?: this.model.paddingVector,
-        govLeftMostChildId?.let { lss.contextVectors[it] } ?: this.model.paddingVector,
-        govRightMostChildId?.let { lss.contextVectors[it] } ?: this.model.paddingVector
-      ))
-    }
-
-    return features
-  }
 
   /**
    * Return the errors of the last predictions done, respect to a gold dependency tree.
