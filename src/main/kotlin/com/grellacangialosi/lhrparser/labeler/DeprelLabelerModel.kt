@@ -45,13 +45,11 @@ class DeprelLabelerModel(
       this.contextEncodingSize,
       this.contextEncodingSize,
       this.contextEncodingSize,
-      this.contextEncodingSize,
-      this.contextEncodingSize,
       this.contextEncodingSize)),
     LayerInterface(
-      size = 6 * this.contextEncodingSize,
+      size = 4 * this.contextEncodingSize,
       connectionType = LayerType.Connection.Concat,
-      dropout = 0.2),
+      dropout = 0.15),
     LayerInterface(
       type = LayerType.Input.Dense,
       size = this.deprels.size,
