@@ -17,7 +17,6 @@ import com.kotlinnlp.neuralparser.helpers.Validator
 import com.kotlinnlp.neuralparser.language.CorpusDictionary
 import com.kotlinnlp.neuralparser.language.Sentence
 import com.kotlinnlp.neuralparser.utils.loadFromTreeBank
-import com.kotlinnlp.simplednn.core.functionalities.activations.ReLU
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.adam.ADAMMethod
 import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNConfig
 import com.kotlinnlp.simplednn.core.embeddings.EmbeddingsMap
@@ -132,7 +131,7 @@ fun buildParser(parsedArgs: TrainingArgs,
     connectionType = LayerType.Connection.LSTM,
     hiddenActivation = Tanh()),
   useLabeler = !parsedArgs.noLabeler,
-  lossCriterionType = LossCriterionType.HingeLoss,
+  lossCriterionType = LossCriterionType.Softmax,
   predictPosTags = !parsedArgs.noPosPrediction))
 
 /**
