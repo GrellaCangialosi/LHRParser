@@ -40,7 +40,6 @@ class DeprelLabelerModel(
    * The Network model that predicts the Deprels
    */
   val networkModel: NeuralNetwork = NeuralNetwork(
-    // [contextDependent, contextGovernor]
     LayerInterface(sizes = listOf(
       this.contextEncodingSize,
       this.contextEncodingSize,

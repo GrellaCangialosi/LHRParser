@@ -1,6 +1,8 @@
 package com.grellacangialosi.lhrparser.labeler
 
 import com.grellacangialosi.lhrparser.LatentSyntacticStructure
+import com.grellacangialosi.lhrparser.labeler.utils.leftMostChild
+import com.grellacangialosi.lhrparser.labeler.utils.rightMostChild
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 
@@ -26,21 +28,14 @@ class FeaturesExtractor(
 
     this.lss.tokens.map { it.id }.zip(this.dependencyTree.heads).forEach { (dependentId, headId) ->
 
-      val depLeftMostChildId: Int? = if (this.dependencyTree.leftDependents[dependentId].isNotEmpty())
-        this.dependencyTree.leftDependents[dependentId].first()
-      else
-        null
-
-      val depRightMostChildId: Int? = if (this.dependencyTree.rightDependents[dependentId].isNotEmpty())
-        this.dependencyTree.rightDependents[dependentId].last()
-      else
-        null
+      val depLeftMostChild: Int? = this.dependencyTree.leftMostChild(dependentId)
+      val depRightMostChild: Int? = this.dependencyTree.rightMostChild(dependentId)
 
       features.add(listOf(
         this.lss.contextVectors[dependentId],
         headId?.let { this.lss.contextVectors[it] } ?: this.lss.virtualRoot,
-        depLeftMostChildId?.let { this.lss.contextVectors[it] } ?: this.paddingVector,
-        depRightMostChildId?.let { this.lss.contextVectors[it] } ?: this.paddingVector
+        depLeftMostChild?.let { this.lss.contextVectors[it] } ?: this.paddingVector,
+        depRightMostChild?.let { this.lss.contextVectors[it] } ?: this.paddingVector
       ))
     }
 

@@ -9,6 +9,8 @@ package com.grellacangialosi.lhrparser.labeler
 
 import com.grellacangialosi.lhrparser.LatentSyntacticStructure
 import com.grellacangialosi.lhrparser.labeler.utils.LossCriterion
+import com.grellacangialosi.lhrparser.labeler.utils.leftMostChild
+import com.grellacangialosi.lhrparser.labeler.utils.rightMostChild
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.dependencytree.Deprel
 import com.kotlinnlp.simplednn.core.neuralprocessor.batchfeedforward.BatchFeedforwardProcessor
@@ -106,13 +108,8 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
 
       contextErrors[dependentId].assignSum(contextDependentErrors)
 
-      if (this.dependencyTree.leftDependents[dependentId].isNotEmpty()) {
-        contextErrors[this.dependencyTree.leftDependents[dependentId].first()].assignSum(depLeftMostChildErrors)
-      }
-
-      if (this.dependencyTree.rightDependents[dependentId].isNotEmpty()) {
-        contextErrors[this.dependencyTree.rightDependents[dependentId].last()].assignSum(depRightMostChildErrors)
-      }
+      this.dependencyTree.leftMostChild(dependentId)?.let { contextErrors[it].assignSum(depLeftMostChildErrors) }
+      this.dependencyTree.rightMostChild(dependentId)?.let { contextErrors[it].assignSum(depRightMostChildErrors) }
 
       val governorId: Int? = this.dependencyTree.heads[dependentId]
 
