@@ -31,10 +31,7 @@ import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 import com.kotlinnlp.simplednn.utils.scheduling.BatchScheduling
 import com.kotlinnlp.simplednn.utils.scheduling.EpochScheduling
 import com.kotlinnlp.simplednn.utils.scheduling.ExampleScheduling
-import com.kotlinnlp.tokensencoder.TokensEncoder
-import com.kotlinnlp.tokensencoder.TokensEncoderBuilder
-import com.kotlinnlp.tokensencoder.TokensEncoderFactory
-import com.kotlinnlp.tokensencoder.TokensEncoderOptimizerFactory
+import com.kotlinnlp.tokensencoder.*
 
 /**
  * The training helper.
@@ -309,16 +306,16 @@ class LHRTrainer(
       DenseNDArrayFactory.zeros(Shape(this.parser.model.tokensEncoderModel.tokenEncodingSize))
     } )
 
-    contextErrors.assignSum(encoder.headsEncoder.propagateErrors(errors))
+    contextErrors.assignSum(encoder.headsEncoder.propagateErrors(errors, this.headsEncoderOptimizer))
 
-    labeler?.propagateErrors(goldTree)?.let { labelerInputErrors ->
+    labeler?.propagateErrors(goldTree, this.deprelLabelerOptimizer!!)?.let { labelerInputErrors ->
       contextErrors.assignSum(labelerInputErrors.contextErrors)
       this.propagateRootErrors(labelerInputErrors.rootErrors)
     }
 
-    tokensErrors.assignSum(encoder.contextEncoder.propagateErrors(contextErrors))
+    tokensErrors.assignSum(encoder.contextEncoder.propagateErrors(contextErrors, this.contextEncoderOptimizer))
 
-    encoder.tokensEncoder.propagateErrors(tokensErrors)
+    encoder.tokensEncoder.propagateErrors(tokensErrors, this.tokensEncoderOptimizer)
   }
 
   /**
@@ -326,54 +323,60 @@ class LHRTrainer(
    * [headsEncoderOptimizer] and returns the input errors.
    *
    * @param outputErrors the output errors
+   * @param optimizer the optimizer
    *
    * @return the input errors
    */
-  private fun HeadsEncoder.propagateErrors(outputErrors: List<DenseNDArray>): List<DenseNDArray> {
+  private fun HeadsEncoder.propagateErrors(outputErrors: List<DenseNDArray>,
+                                           optimizer: HeadsEncoderOptimizer): List<DenseNDArray> = with(this) {
 
-    this.backward(outputErrors)
-    this@LHRTrainer.headsEncoderOptimizer.accumulate(this.getParamsErrors(copy = false))
-    return this.getInputErrors(copy = false)
+    backward(outputErrors)
+    optimizer.accumulate(this.getParamsErrors(copy = false))
+    getInputErrors(copy = false)
   }
 
   /**
    * Propagate the [outputErrors] through the context encoder, accumulates the resulting parameters errors in the
-   * [contextEncoderOptimizer] and returns the input errors.
+   * [optimizer] and returns the input errors.
    *
    * @param outputErrors the output errors
-   *
+   * @param optimizer the optimizer
    * @return the input errors
    */
-  private fun ContextEncoder.propagateErrors(outputErrors: List<DenseNDArray>): List<DenseNDArray> {
+  private fun ContextEncoder.propagateErrors(outputErrors: List<DenseNDArray>,
+                                             optimizer: ContextEncoderOptimizer): List<DenseNDArray> = with(this) {
 
-    this.backward(outputErrors)
-    this@LHRTrainer.contextEncoderOptimizer.accumulate(this.getParamsErrors(copy = false))
-    return this.getInputErrors(copy = false)
+    backward(outputErrors)
+    optimizer.accumulate(getParamsErrors(copy = false))
+    getInputErrors(copy = false)
   }
 
   /**
    * Calculate the labeler errors respect to the [goldTree], accumulates the resulting parameters
-   * errors in the [deprelLabelerOptimizer] and returns the input errors.
+   * errors in the [optimizer] and returns the input errors.
    *
    * @param goldTree the gold dependency tree
+   * @param optimizer the optimizer
    */
-  private fun DeprelLabeler.propagateErrors(goldTree: DependencyTree): DeprelLabeler.InputErrors {
+  private fun DeprelLabeler.propagateErrors(goldTree: DependencyTree,
+                                            optimizer: DeprelLabelerOptimizer): DeprelLabeler.InputErrors = with(this) {
 
-    this.backward(goldDeprels = goldTree.deprels)
-    this@LHRTrainer.deprelLabelerOptimizer!!.accumulate(this.getParamsErrors(copy = false))
-    return this.getInputErrors()
+    backward(goldDeprels = goldTree.deprels)
+    optimizer.accumulate(getParamsErrors(copy = false))
+    getInputErrors()
   }
 
   /**
    * Propagate the [outputErrors] through the tokens encoder, accumulates the resulting parameters errors in the
-   * [tokensEncoderOptimizer] and returns the input errors.
+   * [optimizer] and returns the input errors.
    *
    * @param outputErrors the output errors
+   * @param optimizer the optimizer
    */
-  private fun TokensEncoder.propagateErrors(outputErrors: List<DenseNDArray>) {
-
-    this.backward(outputErrors)
-    this@LHRTrainer.tokensEncoderOptimizer.accumulate(this.getParamsErrors(copy = false))
+  private fun TokensEncoder.propagateErrors(outputErrors: List<DenseNDArray>,
+                                            optimizer: TokensEncoderOptimizer) = with(this) {
+    backward(outputErrors)
+    optimizer.accumulate(getParamsErrors(copy = false))
   }
 
   /**
