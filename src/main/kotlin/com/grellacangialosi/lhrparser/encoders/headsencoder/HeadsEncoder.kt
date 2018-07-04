@@ -54,39 +54,4 @@ class HeadsEncoder(private val model: HeadsEncoderModel) {
   fun getParamsErrors(copy: Boolean = true) = HeadsEncoderParams(
     biRNNParameters = this.encoder.getParamsErrors(copy = copy)
   )
-
-  /**
-   * Get the list of RAN importance scores of each token of the last sentence parsed.
-   * The importance scores are dense arrays (with size equal to the number of tokens), containing the importance of
-   * each token respect to a given one. The score of a token respect to itself is always -1.
-   *
-   * This method should be called only after the parsing of a sentence.
-   * It is required that the networks structures contain only a RAN layer.
-   *
-   * @param tokens the tokens of the last parsed sentence
-   *
-   * @return the list of importance scores of the last parsed sentence
-   */
-  @Suppress("unused")
-  fun getRANImportanceScores(tokens: List<Token>): List<DenseNDArray> {
-
-    val tokensSize: Int = tokens.size
-
-    return tokens.zip(this.encoder.getRANImportanceScores()).map { (token, scores) ->
-      DenseNDArrayFactory.arrayOf(DoubleArray(
-        size = tokensSize,
-        init = { i ->
-
-          val leftScores: DenseNDArray? = scores.first
-          val rightScores: DenseNDArray? = scores.second
-
-          when {
-            i < token.id -> leftScores!![i]
-            i > token.id -> rightScores!![tokensSize - i - 1] // reversed order
-            else -> -1.0
-          }
-        }
-      ))
-    }
-  }
 }
