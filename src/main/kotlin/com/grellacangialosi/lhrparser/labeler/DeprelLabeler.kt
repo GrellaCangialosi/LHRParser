@@ -9,8 +9,6 @@ package com.grellacangialosi.lhrparser.labeler
 
 import com.grellacangialosi.lhrparser.LatentSyntacticStructure
 import com.grellacangialosi.lhrparser.labeler.utils.LossCriterion
-import com.grellacangialosi.lhrparser.labeler.utils.leftMostChild
-import com.grellacangialosi.lhrparser.labeler.utils.rightMostChild
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.dependencytree.Deprel
 import com.kotlinnlp.simplednn.core.neuralprocessor.batchfeedforward.BatchFeedforwardProcessor
@@ -97,27 +95,17 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
       DenseNDArrayFactory.zeros(Shape(this.model.contextEncodingSize))
     })
 
-    lateinit var rootErrors: DenseNDArray
+    val rootErrors: DenseNDArray = DenseNDArrayFactory.zeros(Shape(this.model.contextEncodingSize))
 
-    inputErrors.forEachIndexed { dependentId, errorsList ->
+    inputErrors.forEachIndexed { tokenId, (depErrors, govErrors) ->
 
-      val contextDependentErrors = errorsList[0]
-      val contextGovernorErrors = errorsList[1]
-      val depLeftMostChildErrors = errorsList[2]
-      val depRightMostChildErrors = errorsList[3]
-
-      contextErrors[dependentId].assignSum(contextDependentErrors)
-
-      this.dependencyTree.leftMostChild(dependentId)?.let { contextErrors[it].assignSum(depLeftMostChildErrors) }
-      this.dependencyTree.rightMostChild(dependentId)?.let { contextErrors[it].assignSum(depRightMostChildErrors) }
-
-      val governorId: Int? = this.dependencyTree.heads[dependentId]
-
-      if (governorId != null) {
-        contextErrors[governorId].assignSum(contextGovernorErrors)
-      } else {
-        rootErrors = contextGovernorErrors
+      val depVector: DenseNDArray = contextErrors[tokenId]
+      val govVector: DenseNDArray = this.dependencyTree.heads[tokenId].let {
+        if (it == null) rootErrors else contextErrors[it]
       }
+
+      depVector.assignSum(depErrors)
+      govVector.assignSum(govErrors)
     }
 
     return InputErrors(rootErrors = rootErrors, contextErrors = contextErrors)

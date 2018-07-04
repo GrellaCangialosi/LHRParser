@@ -1,8 +1,6 @@
 package com.grellacangialosi.lhrparser.labeler
 
 import com.grellacangialosi.lhrparser.LatentSyntacticStructure
-import com.grellacangialosi.lhrparser.labeler.utils.leftMostChild
-import com.grellacangialosi.lhrparser.labeler.utils.rightMostChild
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 
@@ -20,22 +18,17 @@ class FeaturesExtractor(
 ) {
 
   /**
-   * @return a list of features
-   */
+  * @return a list of features
+  */
   fun extract(): List<List<DenseNDArray>> {
 
     val features = mutableListOf<List<DenseNDArray>>()
 
     this.lss.tokens.map { it.id }.zip(this.dependencyTree.heads).forEach { (dependentId, headId) ->
 
-      val depLeftMostChild: Int? = this.dependencyTree.leftMostChild(dependentId)
-      val depRightMostChild: Int? = this.dependencyTree.rightMostChild(dependentId)
-
       features.add(listOf(
         this.lss.contextVectors[dependentId],
-        headId?.let { this.lss.contextVectors[it] } ?: this.lss.virtualRoot,
-        depLeftMostChild?.let { this.lss.contextVectors[it] } ?: this.paddingVector,
-        depRightMostChild?.let { this.lss.contextVectors[it] } ?: this.paddingVector
+        headId?.let { this.lss.contextVectors[it] } ?: this.lss.virtualRoot
       ))
     }
 
