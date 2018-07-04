@@ -45,29 +45,43 @@ class ContextEncoderModel(
     private const val serialVersionUID: Long = 1L
   }
 
+  init { require(this.numberOfLayers in 1..2) { "Invalid number of layers: ${this.numberOfLayers}"} }
+
   /**
    * The BiRNN of the ContextEncoder.
    */
-  val biRNN = DeepBiRNN(
-    BiRNN(
-      inputType = LayerType.Input.Dense,
-      inputSize = this.tokenEncodingSize,
-      dropout = dropout,
-      recurrentConnectionType = this.connectionType,
-      hiddenSize = this.tokenEncodingSize,
-      hiddenActivation = this.hiddenActivation,
-      weightsInitializer = weightsInitializer,
-      biasesInitializer = biasesInitializer),
-    BiRNN(
-      inputType = LayerType.Input.Dense,
-      inputSize = this.tokenEncodingSize * 2,
-      dropout = dropout,
-      recurrentConnectionType = this.connectionType,
-      hiddenSize = this.tokenEncodingSize,
-      hiddenActivation = this.hiddenActivation,
-      weightsInitializer = weightsInitializer,
-      biasesInitializer = biasesInitializer)
-  )
+  val biRNN = if (this.numberOfLayers == 2) {
+    DeepBiRNN(
+      BiRNN(
+        inputType = LayerType.Input.Dense,
+        inputSize = this.tokenEncodingSize,
+        dropout = dropout,
+        recurrentConnectionType = this.connectionType,
+        hiddenSize = this.tokenEncodingSize,
+        hiddenActivation = this.hiddenActivation,
+        weightsInitializer = weightsInitializer,
+        biasesInitializer = biasesInitializer),
+      BiRNN(
+        inputType = LayerType.Input.Dense,
+        inputSize = this.tokenEncodingSize * 2,
+        dropout = dropout,
+        recurrentConnectionType = this.connectionType,
+        hiddenSize = this.tokenEncodingSize,
+        hiddenActivation = this.hiddenActivation,
+        weightsInitializer = weightsInitializer,
+        biasesInitializer = biasesInitializer))
+  } else {
+    DeepBiRNN(
+      BiRNN(
+        inputType = LayerType.Input.Dense,
+        inputSize = this.tokenEncodingSize,
+        dropout = dropout,
+        recurrentConnectionType = this.connectionType,
+        hiddenSize = this.tokenEncodingSize,
+        hiddenActivation = this.hiddenActivation,
+        weightsInitializer = weightsInitializer,
+        biasesInitializer = biasesInitializer))
+  }
 
   /**
    * The size of the output context vectors.
