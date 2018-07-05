@@ -77,7 +77,7 @@ fun main(args: Array<String>) = mainBody {
   println("\n-- START TRAINING ON %d SENTENCES".format(trainingSentences.size))
   println(trainer)
 
-  trainer.train(trainingSentences = trainingSentences, goldPOSSentences = goldPOSSentences)
+  trainer.train(trainingSentences = trainingSentences)
 }
 
 /**

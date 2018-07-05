@@ -17,7 +17,6 @@ import com.grellacangialosi.lhrparser.labeler.DeprelLabeler
 import com.grellacangialosi.lhrparser.labeler.DeprelLabelerBuilder
 import com.grellacangialosi.lhrparser.labeler.DeprelLabelerOptimizer
 import com.kotlinnlp.dependencytree.DependencyTree
-import com.kotlinnlp.dependencytree.POSTag
 import com.kotlinnlp.neuralparser.helpers.Trainer
 import com.kotlinnlp.neuralparser.helpers.Validator
 import com.kotlinnlp.neuralparser.language.Sentence
@@ -204,58 +203,52 @@ class LHRTrainer(
    * Train the Transition System with the given [sentence].
    *
    * @param sentence a sentence
-   * @param goldPOSSentence an optional sentence with gold annotated POS in its dependency tree
    */
-  override fun trainSentence(sentence: Sentence, goldPOSSentence: Sentence?) {
+  override fun trainSentence(sentence: Sentence) {
 
     val goldTree: DependencyTree = checkNotNull(sentence.dependencyTree) {
       "The gold dependency tree of a sentence cannot be null during the training."
     }
 
-    val goldPOSTree: DependencyTree? = goldPOSSentence?.let { checkNotNull(it.dependencyTree) {
-      "The gold dependency tree of a gold POS sentence cannot be null during the training."
-    } }
-
     this.beforeSentenceLearning()
 
-    this.learn(
-      sentence = sentence,
+    val encoder: LSSEncoder = this.buildEncoder()
+    val lss: LatentSyntacticStructure = encoder.encode(sentence.tokens)
+    val latentHeadsErrors = calculateLatentHeadsErrors(lss, goldTree.heads)
+
+    val labeler: DeprelLabeler? = this.deprelLabelerBuilder?.invoke()
+    labeler?.predict(lss, goldTree) // important to calculate the right errors
+
+    this.propagateErrors(
+      errors = latentHeadsErrors,
       goldTree = goldTree,
-      goldPosTags = goldPOSTree?.posTags)
+      encoder = encoder,
+      labeler = labeler)
 
     this.afterSentenceLearning()
   }
 
   /**
-   * Learn the latent syntactic structure of a sentence.
-   *
-   * @param sentence a sentence
-   * @param goldTree the gold dependency tree of the [sentence]
-   * @param goldPosTags optional gold POS tags to use instead of the ones of the [goldTree] (default = null)
-   *
-   * @return the loss
+   * @return a LSSEncoder
    */
-  private fun learn(sentence: Sentence,
-                    goldTree: DependencyTree,
-                    goldPosTags: Array<POSTag?>? = null) {
+  private fun buildEncoder() = LSSEncoder(
+    tokensEncoder = this.tokensEncoderBuilder.invoke(),
+    contextEncoder = this.contextEncoderBuilder.invoke(),
+    headsEncoder = this.headsEncoderBuilder.invoke(),
+    virtualRoot = this.virtualRoot)
 
-    val labeler: DeprelLabeler? = this.deprelLabelerBuilder?.invoke()
-    val encoder: LSSEncoder = this.buildEncoder()
-    val lss: LatentSyntacticStructure = encoder.encode(sentence.tokens)
-
-    labeler?.predict(lss, goldTree) // important to calculate the right errors
-
-    val latentHeadsErrors = MSECalculator().calculateErrors(
+  /**
+   * Calculate the errors of the latent heads
+   *
+   * @param lss the latent syntactic structure
+   * @param goldHeads the gold heads ids
+   *
+   * @return the errors of the latent heads
+   */
+  private fun calculateLatentHeadsErrors(lss: LatentSyntacticStructure, goldHeads: Array<Int?>): List<DenseNDArray> =
+    MSECalculator().calculateErrors(
       outputSequence = lss.latentHeads,
-      outputGoldSequence = this.getExpectedLatentHeads(lss, goldTree.heads))
-
-    this.propagateErrors(
-      errors = latentHeadsErrors,
-      goldTree = goldTree,
-      goldPosTags = goldPosTags ?: goldTree.posTags,
-      encoder = encoder,
-      labeler = labeler)
-  }
+      outputGoldSequence = this.getExpectedLatentHeads(lss, goldHeads))
 
   /**
    * Return a list containing the expected latent heads, one for each token of the sentence.
@@ -276,27 +269,16 @@ class LHRTrainer(
   }
 
   /**
-   * @return a LSSEncoder
-   */
-  private fun buildEncoder() = LSSEncoder(
-    tokensEncoder = this.tokensEncoderBuilder.invoke(),
-    contextEncoder = this.contextEncoderBuilder.invoke(),
-    headsEncoder = this.headsEncoderBuilder.invoke(),
-    virtualRoot = this.virtualRoot)
-
-  /**
    * Propagate the errors through the encoders.
    *
    * @param errors the latent heads errors
    * @param goldTree the gold dependency tree
-   * @param goldPosTags the gold pos-tags
    * @param encoder the encoder of the latent syntactic structure
    * @param labeler the labeler
    */
   private fun propagateErrors(
     errors: List<DenseNDArray>,
     goldTree: DependencyTree,
-    goldPosTags: Array<POSTag?>?,
     encoder: LSSEncoder,
     labeler: DeprelLabeler?){
 
@@ -319,34 +301,34 @@ class LHRTrainer(
   }
 
   /**
-   * Propagate the [outputErrors] through the heads encoder, accumulates the resulting parameters errors in the
+   * Propagate the [errors] through the heads encoder, accumulates the resulting parameters errors in the
    * [headsEncoderOptimizer] and returns the input errors.
    *
-   * @param outputErrors the output errors
+   * @param errors the output errors
    * @param optimizer the optimizer
    *
    * @return the input errors
    */
-  private fun HeadsEncoder.propagateErrors(outputErrors: List<DenseNDArray>,
+  private fun HeadsEncoder.propagateErrors(errors: List<DenseNDArray>,
                                            optimizer: HeadsEncoderOptimizer): List<DenseNDArray> = with(this) {
 
-    backward(outputErrors)
+    backward(errors)
     optimizer.accumulate(this.getParamsErrors(copy = false))
     getInputErrors(copy = false)
   }
 
   /**
-   * Propagate the [outputErrors] through the context encoder, accumulates the resulting parameters errors in the
+   * Propagate the [errors] through the context encoder, accumulates the resulting parameters errors in the
    * [optimizer] and returns the input errors.
    *
-   * @param outputErrors the output errors
+   * @param errors the output errors
    * @param optimizer the optimizer
    * @return the input errors
    */
-  private fun ContextEncoder.propagateErrors(outputErrors: List<DenseNDArray>,
+  private fun ContextEncoder.propagateErrors(errors: List<DenseNDArray>,
                                              optimizer: ContextEncoderOptimizer): List<DenseNDArray> = with(this) {
 
-    backward(outputErrors)
+    backward(errors)
     optimizer.accumulate(getParamsErrors(copy = false))
     getInputErrors(copy = false)
   }
@@ -367,15 +349,15 @@ class LHRTrainer(
   }
 
   /**
-   * Propagate the [outputErrors] through the tokens encoder, accumulates the resulting parameters errors in the
+   * Propagate the [errors] through the tokens encoder, accumulates the resulting parameters errors in the
    * [optimizer] and returns the input errors.
    *
-   * @param outputErrors the output errors
+   * @param errors the output errors
    * @param optimizer the optimizer
    */
-  private fun TokensEncoder.propagateErrors(outputErrors: List<DenseNDArray>,
+  private fun TokensEncoder.propagateErrors(errors: List<DenseNDArray>,
                                             optimizer: TokensEncoderOptimizer) = with(this) {
-    backward(outputErrors)
+    backward(errors)
     optimizer.accumulate(getParamsErrors(copy = false))
   }
 

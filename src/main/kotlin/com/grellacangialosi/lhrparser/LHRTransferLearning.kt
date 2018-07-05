@@ -90,9 +90,8 @@ class LHRTransferLearning(
    * Transfer the knowledge acquired by the context encoder of a reference parser to that of the target parser.
    *
    * @param sentence a sentence
-   * @param goldPOSSentence an optional sentence with gold annotated POS in its dependency tree
    */
-  override fun trainSentence(sentence: Sentence, goldPOSSentence: Sentence?) {
+  override fun trainSentence(sentence: Sentence) {
 
     this.beforeSentenceLearning()
 
