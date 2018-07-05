@@ -11,8 +11,7 @@ import com.grellacangialosi.lhrparser.LatentSyntacticStructure
 import com.grellacangialosi.lhrparser.utils.ArcScores
 import com.grellacangialosi.lhrparser.utils.ArcScores.Companion.rootId
 import com.kotlinnlp.neuralparser.language.Token
-import com.kotlinnlp.simplednn.simplemath.normalize
-import com.kotlinnlp.simplednn.simplemath.similarity
+import com.kotlinnlp.simplednn.simplemath.cosineSimilarity
 
 /**
  * The HeadsDecoder.
@@ -45,9 +44,9 @@ class HeadsDecoder : LSSDecoder {
     this.lssNorm = LatentSyntacticStructure(
       tokens = lss.tokens,
       tokensEncoding = lss.tokensEncoding,
-      contextVectors = lss.contextVectors.map { it.normalize() },
-      latentHeads = lss.latentHeads.map { it.normalize() },
-      virtualRoot = lss.virtualRoot.normalize())
+      contextVectors = lss.contextVectors.map { it.normalize2() },
+      latentHeads = lss.latentHeads.map { it.normalize2() },
+      virtualRoot = lss.virtualRoot.normalize2())
 
     lss.tokens.forEach {
 
@@ -71,7 +70,7 @@ class HeadsDecoder : LSSDecoder {
 
     this.lssNorm.tokens
       .filterNot { it.id == dependent.id || it.isPunctuation }
-      .associateTo(scores) { it.id to similarity(
+      .associateTo(scores) { it.id to cosineSimilarity(
         a = this.lssNorm.contextVectors[it.id],
         b = this.lssNorm.latentHeads[dependent.id]) }
   }
@@ -87,7 +86,7 @@ class HeadsDecoder : LSSDecoder {
 
     if (!dependent.isPunctuation) { // the root shouldn't be a punctuation token
 
-      this.similarityMatrix.getValue(dependent.id)[rootId] = similarity(
+      this.similarityMatrix.getValue(dependent.id)[rootId] = cosineSimilarity(
         a = this.lssNorm.latentHeads[dependent.id],
         b = this.lssNorm.virtualRoot)
     }
