@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.labeler
+package com.grellacangialosi.lhrparser.neuralmodels.headsencoder
 
-import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
+import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNParameters
 
 /**
- * @property params the parameters of the [DeprelLabeler]
+ * @property biRNNParameters the params of the BiRNN of the [HeadsEncoder]
  */
-class DeprelLabelerParams(val params: NetworkParameters)
+class HeadsEncoderParams(val biRNNParameters: BiRNNParameters)

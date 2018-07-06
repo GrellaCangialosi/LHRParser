@@ -5,22 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.encoders.headsencoder
+package com.grellacangialosi.lhrparser.neuralmodels.labeler
 
 /**
- * A simple [HeadsEncoder] builder.
+ * A simple [DeprelLabeler] builder.
  *
  * @param model the encoder model
  */
-class HeadsEncoderBuilder(model: HeadsEncoderModel){
+class DeprelLabelerBuilder(model: DeprelLabelerModel){
 
   /**
    * The context encoder.
    */
-  private val headsEncoder = HeadsEncoder(model)
+  private val labeler = DeprelLabeler(model)
 
   /**
-   * @return the [headsEncoder]
+   * @return the [labeler]
    */
-  operator fun invoke(): HeadsEncoder = this.headsEncoder
+  operator fun invoke(): DeprelLabeler = this.labeler
 }

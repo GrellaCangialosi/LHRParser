@@ -5,8 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.encoders.contextencoder
+package com.grellacangialosi.lhrparser.neuralmodels.contextencoder
 
+import com.grellacangialosi.lhrparser.neuralmodels.NeuralModel
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 import com.kotlinnlp.simplednn.deeplearning.birnn.deepbirnn.DeepBiRNNEncoder
 
@@ -15,7 +16,13 @@ import com.kotlinnlp.simplednn.deeplearning.birnn.deepbirnn.DeepBiRNNEncoder
  *
  * @param model the model of this encoder
  */
-class ContextEncoder(private val model: ContextEncoderModel) {
+class ContextEncoder(private val model: ContextEncoderModel) : NeuralModel<
+  List<DenseNDArray>, // InputType
+  List<DenseNDArray>, // OutputType
+  List<DenseNDArray>, // ErrorsType
+  List<DenseNDArray>, // InputErrorsType
+  ContextEncoderParams // ParamsType
+  > {
 
   /**
    * The BiRNN Encoder that encodes the tokens into the context vectors.
@@ -23,17 +30,17 @@ class ContextEncoder(private val model: ContextEncoderModel) {
   private val encoder = DeepBiRNNEncoder<DenseNDArray>(this.model.biRNN)
 
   /**
-   * @param tokensEncodings tokens encodings
+   * @param input tokens encodings
    *
    * @return the context vectors of the tokens
    */
-  fun encode(tokensEncodings: List<DenseNDArray>): List<DenseNDArray> =
-    this.encoder.encode(sequence = tokensEncodings, useDropout = true)
+  override fun forward(input: List<DenseNDArray>): List<DenseNDArray> =
+    this.encoder.encode(sequence = input, useDropout = true)
 
   /**
    * @param errors the errors of the current encoding
    */
-  fun backward(errors: List<DenseNDArray>) {
+  override fun backward(errors: List<DenseNDArray>) {
 
     this.encoder.backward(errors, propagateToInput = true)
   }
@@ -43,12 +50,12 @@ class ContextEncoder(private val model: ContextEncoderModel) {
    *
    * @return the input errors
    */
-  fun getInputErrors(copy: Boolean = true): List<DenseNDArray> = this.encoder.getInputSequenceErrors(copy = copy)
+  override fun getInputErrors(copy: Boolean): List<DenseNDArray> = this.encoder.getInputSequenceErrors(copy = copy)
 
   /**
    * @param copy a Boolean indicating whether the returned errors must be a copy or a reference
    *
    * @return the errors of the [ContextEncoder] parameters
    */
-  fun getParamsErrors(copy: Boolean = true) = ContextEncoderParams(this.encoder.getParamsErrors(copy = copy))
+  override fun getParamsErrors(copy: Boolean) = ContextEncoderParams(this.encoder.getParamsErrors(copy = copy))
 }

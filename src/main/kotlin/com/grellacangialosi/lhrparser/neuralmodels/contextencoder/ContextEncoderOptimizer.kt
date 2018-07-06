@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.encoders.contextencoder
+package com.grellacangialosi.lhrparser.neuralmodels.contextencoder
 
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
 import com.kotlinnlp.simplednn.core.optimizer.Optimizer
@@ -19,7 +19,7 @@ import com.kotlinnlp.simplednn.deeplearning.birnn.deepbirnn.DeepBiRNNParameters
 class ContextEncoderOptimizer(
   private val model: ContextEncoderModel,
   updateMethod: UpdateMethod<*>
-) : Optimizer(
+) : Optimizer<ContextEncoderParams>(
   updateMethod = updateMethod
 ) {
 
@@ -43,6 +43,6 @@ class ContextEncoderOptimizer(
    * @param copy a Boolean indicating if the [paramsErrors] can be used as reference or must be copied. Set copy = false
    *             to optimize the accumulation when the amount of the errors to accumulate is 1. (default = true)
    */
-  fun accumulate(paramsErrors: ContextEncoderParams, copy: Boolean = true) =
+  override fun accumulate(paramsErrors: ContextEncoderParams, copy: Boolean) =
     this.optimizer.accumulate(paramsErrors = paramsErrors.biRNNParameters, copy = copy)
 }

@@ -7,16 +7,16 @@
 
 package com.grellacangialosi.lhrparser
 
-import com.grellacangialosi.lhrparser.decoders.HeadsDecoder
+import com.grellacangialosi.lhrparser.decoders.CosineDecoder
 import com.grellacangialosi.lhrparser.utils.ArcScores
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
-import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoder
-import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderBuilder
-import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoder
-import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderBuilder
-import com.grellacangialosi.lhrparser.labeler.DeprelLabeler
-import com.grellacangialosi.lhrparser.labeler.DeprelLabelerBuilder
+import com.grellacangialosi.lhrparser.neuralmodels.contextencoder.ContextEncoder
+import com.grellacangialosi.lhrparser.neuralmodels.contextencoder.ContextEncoderBuilder
+import com.grellacangialosi.lhrparser.neuralmodels.headsencoder.HeadsEncoder
+import com.grellacangialosi.lhrparser.neuralmodels.headsencoder.HeadsEncoderBuilder
+import com.grellacangialosi.lhrparser.neuralmodels.labeler.DeprelLabeler
+import com.grellacangialosi.lhrparser.neuralmodels.labeler.DeprelLabelerBuilder
 import com.grellacangialosi.lhrparser.utils.ArcScores.Companion.rootId
 import com.grellacangialosi.lhrparser.utils.CyclesFixer
 import com.kotlinnlp.neuralparser.NeuralParser
@@ -73,7 +73,7 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
 
     val encoder: LSSEncoder = this.buildEncoder()
     val lss = encoder.encode(sentence.tokens)
-    val scores: ArcScores = HeadsDecoder().decode(lss)
+    val scores: ArcScores = CosineDecoder().decode(lss)
 
     return this.buildDependencyTree(lss, scores)
   }
@@ -97,9 +97,11 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
 
     val dependencyTree = DependencyTree(lss.tokens.size)
 
-    this.assignHeads(dependencyTree, scores)
-    this.fixCycles(dependencyTree, scores)
-    this.assignLabels(dependencyTree, lss)
+    dependencyTree.let {
+      this.assignHeads(it, scores)
+      this.fixCycles(it, scores)
+      this.assignLabels(it, lss)
+    }
 
     return dependencyTree
   }
@@ -143,7 +145,7 @@ class LHRParser(override val model: LHRModel) : NeuralParser<LHRModel> {
     val labeler: DeprelLabeler? = this@LHRParser.deprelLabelerBuilder?.invoke()
 
     labeler?.let {
-      it.predict(lss, dependencyTree).forEachIndexed { tokenId, prediction ->
+      it.forward(DeprelLabeler.Input(lss, dependencyTree)).forEachIndexed { tokenId, prediction ->
         dependencyTree.setDeprel(tokenId, it.getDeprel(prediction.deprels.argMaxIndex()))
       }
     }

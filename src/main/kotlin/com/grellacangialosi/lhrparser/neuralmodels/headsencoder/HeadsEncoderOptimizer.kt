@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.encoders.headsencoder
+package com.grellacangialosi.lhrparser.neuralmodels.headsencoder
 
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
 import com.kotlinnlp.simplednn.core.optimizer.Optimizer
@@ -19,7 +19,7 @@ import com.kotlinnlp.simplednn.deeplearning.birnn.BiRNNParameters
 class HeadsEncoderOptimizer(
   private val model: HeadsEncoderModel,
   updateMethod: UpdateMethod<*>
-) : Optimizer(
+) : Optimizer<HeadsEncoderParams>(
   updateMethod = updateMethod
 ) {
 
@@ -43,7 +43,7 @@ class HeadsEncoderOptimizer(
    * @param copy a Boolean indicating if the params errors can be used as reference or must be copied. Set copy = false
    *             to optimize the accumulation when the amount of the errors to accumulate is 1. (default = true)
    */
-  fun accumulate(paramsErrors: HeadsEncoderParams, copy: Boolean = true) {
+  override fun accumulate(paramsErrors: HeadsEncoderParams, copy: Boolean) {
     this.encoderOptimizer.accumulate(paramsErrors.biRNNParameters, copy = copy)
   }
 }

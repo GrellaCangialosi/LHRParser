@@ -7,10 +7,10 @@
 
 package com.grellacangialosi.lhrparser
 
-import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderModel
-import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderModel
-import com.grellacangialosi.lhrparser.labeler.DeprelLabelerModel
-import com.grellacangialosi.lhrparser.labeler.utils.LossCriterionType
+import com.grellacangialosi.lhrparser.neuralmodels.contextencoder.ContextEncoderModel
+import com.grellacangialosi.lhrparser.neuralmodels.headsencoder.HeadsEncoderModel
+import com.grellacangialosi.lhrparser.neuralmodels.labeler.DeprelLabelerModel
+import com.grellacangialosi.lhrparser.neuralmodels.labeler.utils.LossCriterionType
 import com.kotlinnlp.simplednn.core.arrays.UpdatableDenseArray
 import com.kotlinnlp.simplednn.core.functionalities.initializers.GlorotInitializer
 import com.kotlinnlp.simplednn.core.embeddings.Embedding

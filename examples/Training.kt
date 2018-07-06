@@ -8,7 +8,7 @@
 import com.grellacangialosi.lhrparser.LHRModel
 import com.grellacangialosi.lhrparser.LHRParser
 import com.grellacangialosi.lhrparser.LHRTrainer
-import com.grellacangialosi.lhrparser.labeler.utils.LossCriterionType
+import com.grellacangialosi.lhrparser.neuralmodels.labeler.utils.LossCriterionType
 import com.kotlinnlp.linguisticdescription.lexicon.LexiconDictionary
 import com.kotlinnlp.morphologicalanalyzer.dictionary.MorphologyDictionary
 import com.kotlinnlp.simplednn.core.functionalities.activations.Tanh

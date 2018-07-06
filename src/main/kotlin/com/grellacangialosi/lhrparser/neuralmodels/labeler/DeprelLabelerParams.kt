@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.encoders.contextencoder
+package com.grellacangialosi.lhrparser.neuralmodels.labeler
 
-import com.kotlinnlp.simplednn.deeplearning.birnn.deepbirnn.DeepBiRNNParameters
+import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
 
 /**
- * @property biRNNParameters the params of the [ContextEncoder]
+ * @property params the parameters of the [DeprelLabeler]
  */
-class ContextEncoderParams(val biRNNParameters: DeepBiRNNParameters)
+class DeprelLabelerParams(val params: NetworkParameters)

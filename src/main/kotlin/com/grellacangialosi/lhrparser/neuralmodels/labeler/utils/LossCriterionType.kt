@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.labeler.utils
+package com.grellacangialosi.lhrparser.neuralmodels.labeler.utils
 
 /**
  * The available loss criterion.

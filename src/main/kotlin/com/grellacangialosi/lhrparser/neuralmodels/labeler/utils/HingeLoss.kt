@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.labeler.utils
+package com.grellacangialosi.lhrparser.neuralmodels.labeler.utils
 
 import com.kotlinnlp.simplednn.core.functionalities.losses.getErrorsByHingeLoss
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray

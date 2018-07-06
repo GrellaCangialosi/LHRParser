@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.labeler
+package com.grellacangialosi.lhrparser.neuralmodels.labeler
 
 import com.grellacangialosi.lhrparser.LatentSyntacticStructure
-import com.grellacangialosi.lhrparser.labeler.utils.LossCriterion
+import com.grellacangialosi.lhrparser.neuralmodels.NeuralModel
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.dependencytree.Deprel
 import com.kotlinnlp.simplednn.core.neuralprocessor.batchfeedforward.BatchFeedforwardProcessor
@@ -19,7 +19,21 @@ import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 /**
  * @param model the model of this labeler
  */
-class DeprelLabeler(private val model: DeprelLabelerModel) {
+class DeprelLabeler(private val model: DeprelLabelerModel) : NeuralModel<
+  DeprelLabeler.Input, // InputType
+  List<DeprelLabeler.Prediction>, // OutputType
+  List<DenseNDArray>, // ErrorsType
+  DeprelLabeler.InputErrors, // InputErrorsType
+  DeprelLabelerParams // ParamsType
+  > {
+
+  /**
+   * The input of this labeler.
+   *
+   * @param lss the latent syntactic structure
+   * @param dependencyTree the dependency tree
+   */
+  class Input (val lss: LatentSyntacticStructure, val dependencyTree: DependencyTree)
 
   /**
    * The input errors of this labeler.
@@ -46,48 +60,37 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
   private lateinit var dependencyTree: DependencyTree
 
   /**
-   * The last predictions done.
-   */
-  private lateinit var lastPredictions: List<Prediction>
-
-  /**
    * Predict the deprel and the POS tag for each token.
    *
-   * @param lss the latent syntactic structure
-   * @param dependencyTree the dependency tree
+   * @param input the input
    *
    * @return a list of predictions, one for each token
    */
-  fun predict(lss: LatentSyntacticStructure, dependencyTree: DependencyTree): List<Prediction> {
+  override fun forward(input: Input): List<Prediction> {
 
-    this.initialize()
+    this.dependencyTree = input.dependencyTree
 
-    this.dependencyTree = dependencyTree
-
-    val features = FeaturesExtractor(lss, dependencyTree, this.model.paddingVector).extract()
+    val features = FeaturesExtractor(input.lss, input.dependencyTree, this.model.paddingVector).extract()
 
     val outputList: List<DenseNDArray> = this.processor.forward(ArrayList(features))
 
-    this.lastPredictions = outputList.map { Prediction(deprels = it) }
-
-    return this.lastPredictions
+    return outputList.map { Prediction(deprels = it) }
   }
 
   /**
-   * Propagate the errors through the neural components of the labeler. Errors are calculated comparing the last
-   * predictions done with the given gold deprels and POS tags.
+   * Propagate the errors through the neural components of the labeler.
    *
-   * @param goldDeprels the list of gold deprels
+   * @param errors the list of errors
    */
-  fun backward(goldDeprels: Array<Deprel?>) {
+  override fun backward(errors: List<DenseNDArray>) {
 
-    this.processor.backward(outputErrors = this.getPredictionsErrors(goldDeprels = goldDeprels), propagateToInput = true)
+    this.processor.backward(outputErrors = errors, propagateToInput = true)
   }
 
   /**
    * @return the input errors and the root errors
    */
-  fun getInputErrors(): InputErrors {
+  override fun getInputErrors(copy: Boolean): InputErrors {
 
     val inputErrors: List<List<DenseNDArray>> = this.processor.getInputsErrors(copy = false)
 
@@ -116,36 +119,8 @@ class DeprelLabeler(private val model: DeprelLabelerModel) {
    *
    * @return the errors of the [DeprelLabeler] parameters
    */
-  fun getParamsErrors(copy: Boolean = true) = DeprelLabelerParams(
+  override fun getParamsErrors(copy: Boolean) = DeprelLabelerParams(
     params = this.processor.getParamsErrors(copy = copy))
-
-  /**
-   * Initialize the labeler for the next sentence.
-   */
-  private fun initialize() { }
-
-  /**
-   * Return the errors of the last predictions done, respect to a gold dependency tree.
-   *
-   * @param goldDeprels the list of gold deprels
-   *
-   * @return a list of predictions errors
-   */
-  private fun getPredictionsErrors(goldDeprels: Array<Deprel?>): List<DenseNDArray> {
-
-    val errorsList = mutableListOf<DenseNDArray>()
-
-    this.lastPredictions.forEachIndexed { tokenId, prediction ->
-
-      val goldDeprel: Deprel = goldDeprels[tokenId]!!
-      val goldDeprelIndex: Int = this.model.deprels.getId(goldDeprel)!!
-
-      errorsList.add(LossCriterion(this.model.lossCriterionType).getPredictionErrors(
-        prediction = prediction.deprels, goldIndex = goldDeprelIndex))
-    }
-
-    return errorsList
-  }
 
   /**
    * @param index a prediction index

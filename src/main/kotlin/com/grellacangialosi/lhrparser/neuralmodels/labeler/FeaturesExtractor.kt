@@ -1,4 +1,4 @@
-package com.grellacangialosi.lhrparser.labeler
+package com.grellacangialosi.lhrparser.neuralmodels.labeler
 
 import com.grellacangialosi.lhrparser.LatentSyntacticStructure
 import com.kotlinnlp.dependencytree.DependencyTree

@@ -7,15 +7,16 @@
 
 package com.grellacangialosi.lhrparser
 
-import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoder
-import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderBuilder
-import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderOptimizer
-import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoder
-import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderBuilder
-import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoderOptimizer
-import com.grellacangialosi.lhrparser.labeler.DeprelLabeler
-import com.grellacangialosi.lhrparser.labeler.DeprelLabelerBuilder
-import com.grellacangialosi.lhrparser.labeler.DeprelLabelerOptimizer
+import com.grellacangialosi.lhrparser.neuralmodels.contextencoder.ContextEncoder
+import com.grellacangialosi.lhrparser.neuralmodels.contextencoder.ContextEncoderBuilder
+import com.grellacangialosi.lhrparser.neuralmodels.contextencoder.ContextEncoderOptimizer
+import com.grellacangialosi.lhrparser.neuralmodels.headsencoder.HeadsEncoder
+import com.grellacangialosi.lhrparser.neuralmodels.headsencoder.HeadsEncoderBuilder
+import com.grellacangialosi.lhrparser.neuralmodels.headsencoder.HeadsEncoderOptimizer
+import com.grellacangialosi.lhrparser.neuralmodels.labeler.DeprelLabeler
+import com.grellacangialosi.lhrparser.neuralmodels.labeler.DeprelLabelerBuilder
+import com.grellacangialosi.lhrparser.neuralmodels.labeler.DeprelLabelerOptimizer
+import com.grellacangialosi.lhrparser.neuralmodels.propagateErrors
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.neuralparser.helpers.Trainer
 import com.kotlinnlp.neuralparser.helpers.Validator
@@ -217,11 +218,14 @@ class LHRTrainer(
     val latentHeadsErrors = calculateLatentHeadsErrors(lss, goldTree.heads)
 
     val labeler: DeprelLabeler? = this.deprelLabelerBuilder?.invoke()
-    labeler?.predict(lss, goldTree) // important to calculate the right errors
+    val labelerErrors: List<DenseNDArray>? = labeler?.let {
+      val labelerPrediction: List<DeprelLabeler.Prediction> = it.forward(DeprelLabeler.Input(lss, goldTree))
+      this.parser.model.labelerModel?.calculateLoss(labelerPrediction, goldTree.deprels)
+    }
 
     this.propagateErrors(
-      errors = latentHeadsErrors,
-      goldTree = goldTree,
+      latentHeadsErrors = latentHeadsErrors,
+      labelerErrors = labelerErrors,
       encoder = encoder,
       labeler = labeler)
 
@@ -271,26 +275,28 @@ class LHRTrainer(
   /**
    * Propagate the errors through the encoders.
    *
-   * @param errors the latent heads errors
-   * @param goldTree the gold dependency tree
+   * @param latentHeadsErrors the latent heads errors
+   * @param labelerErrors the labeler errors
    * @param encoder the encoder of the latent syntactic structure
    * @param labeler the labeler
    */
   private fun propagateErrors(
-    errors: List<DenseNDArray>,
-    goldTree: DependencyTree,
+    latentHeadsErrors: List<DenseNDArray>,
+    labelerErrors: List<DenseNDArray>?,
     encoder: LSSEncoder,
     labeler: DeprelLabeler?){
 
-    val contextErrors = List(size = errors.size, init = { DenseNDArrayFactory.zeros(errors[0].shape) } )
+    val contextErrors = List(size = latentHeadsErrors.size, init = {
+      DenseNDArrayFactory.zeros(latentHeadsErrors[0].shape)
+    } )
 
-    val tokensErrors = List(size = errors.size, init = {
+    val tokensErrors = List(size = latentHeadsErrors.size, init = {
       DenseNDArrayFactory.zeros(Shape(this.parser.model.tokensEncoderModel.tokenEncodingSize))
     } )
 
-    contextErrors.assignSum(encoder.headsEncoder.propagateErrors(errors, this.headsEncoderOptimizer))
+    contextErrors.assignSum(encoder.headsEncoder.propagateErrors(latentHeadsErrors, this.headsEncoderOptimizer))
 
-    labeler?.propagateErrors(goldTree, this.deprelLabelerOptimizer!!)?.let { labelerInputErrors ->
+    labeler?.propagateErrors(labelerErrors!!, this.deprelLabelerOptimizer!!)?.let { labelerInputErrors ->
       contextErrors.assignSum(labelerInputErrors.contextErrors)
       this.propagateRootErrors(labelerInputErrors.rootErrors)
     }
@@ -301,72 +307,11 @@ class LHRTrainer(
   }
 
   /**
-   * Propagate the [errors] through the heads encoder, accumulates the resulting parameters errors in the
-   * [headsEncoderOptimizer] and returns the input errors.
-   *
-   * @param errors the output errors
-   * @param optimizer the optimizer
-   *
-   * @return the input errors
-   */
-  private fun HeadsEncoder.propagateErrors(errors: List<DenseNDArray>,
-                                           optimizer: HeadsEncoderOptimizer): List<DenseNDArray> = with(this) {
-
-    backward(errors)
-    optimizer.accumulate(this.getParamsErrors(copy = false))
-    getInputErrors(copy = false)
-  }
-
-  /**
-   * Propagate the [errors] through the context encoder, accumulates the resulting parameters errors in the
-   * [optimizer] and returns the input errors.
-   *
-   * @param errors the output errors
-   * @param optimizer the optimizer
-   * @return the input errors
-   */
-  private fun ContextEncoder.propagateErrors(errors: List<DenseNDArray>,
-                                             optimizer: ContextEncoderOptimizer): List<DenseNDArray> = with(this) {
-
-    backward(errors)
-    optimizer.accumulate(getParamsErrors(copy = false))
-    getInputErrors(copy = false)
-  }
-
-  /**
-   * Calculate the labeler errors respect to the [goldTree], accumulates the resulting parameters
-   * errors in the [optimizer] and returns the input errors.
-   *
-   * @param goldTree the gold dependency tree
-   * @param optimizer the optimizer
-   */
-  private fun DeprelLabeler.propagateErrors(goldTree: DependencyTree,
-                                            optimizer: DeprelLabelerOptimizer): DeprelLabeler.InputErrors = with(this) {
-
-    backward(goldDeprels = goldTree.deprels)
-    optimizer.accumulate(getParamsErrors(copy = false))
-    getInputErrors()
-  }
-
-  /**
-   * Propagate the [errors] through the tokens encoder, accumulates the resulting parameters errors in the
-   * [optimizer] and returns the input errors.
-   *
-   * @param errors the output errors
-   * @param optimizer the optimizer
-   */
-  private fun TokensEncoder.propagateErrors(errors: List<DenseNDArray>,
-                                            optimizer: TokensEncoderOptimizer) = with(this) {
-    backward(errors)
-    optimizer.accumulate(getParamsErrors(copy = false))
-  }
-
-  /**
    * Propagate the [errors] through the virtual root embedding.
    *
    * @param errors the errors
    */
   private fun propagateRootErrors(errors: DenseNDArray) {
-    this.parser.model.rootEmbedding.let { this.updateMethod.update(array = it.array, errors = errors) }
+    this.updateMethod.update(array = this.parser.model.rootEmbedding.array, errors = errors)
   }
 }

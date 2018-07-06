@@ -5,15 +5,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.labeler.utils
+package com.grellacangialosi.lhrparser.neuralmodels.labeler.utils
 
-import com.kotlinnlp.simplednn.core.functionalities.losses.SoftmaxCrossEntropyCalculator
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 
 /**
- * The loss criterion that calculates the errors with the cross-entropy softmax.
+ * The LossCriterion interface.
  */
-class Softmax : LossCriterion {
+interface LossCriterion {
+
+  companion object {
+
+    /**
+     * The LossCriterion builder.
+     *
+     * @param type the loss criterion type
+     */
+    operator fun invoke(type: LossCriterionType): LossCriterion = when (type) {
+      LossCriterionType.Softmax -> Softmax()
+      LossCriterionType.HingeLoss -> HingeLoss()
+    }
+  }
 
   /**
    * @param prediction a prediction array
@@ -21,6 +33,5 @@ class Softmax : LossCriterion {
    *
    * @return the errors of the given prediction
    */
-  override fun getPredictionErrors(prediction: DenseNDArray, goldIndex: Int): DenseNDArray =
-    SoftmaxCrossEntropyCalculator().calculateErrors(output = prediction, goldIndex = goldIndex)
+  fun getPredictionErrors(prediction: DenseNDArray, goldIndex: Int): DenseNDArray
 }

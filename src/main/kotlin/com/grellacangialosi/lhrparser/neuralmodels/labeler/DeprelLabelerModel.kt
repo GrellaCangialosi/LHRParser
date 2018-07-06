@@ -5,15 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.labeler
+package com.grellacangialosi.lhrparser.neuralmodels.labeler
 
-import com.grellacangialosi.lhrparser.labeler.utils.LossCriterionType
+import com.grellacangialosi.lhrparser.neuralmodels.labeler.utils.LossCriterion
+import com.grellacangialosi.lhrparser.neuralmodels.labeler.utils.LossCriterionType
 import com.kotlinnlp.dependencytree.Deprel
 import com.kotlinnlp.simplednn.core.functionalities.activations.Softmax
+import com.kotlinnlp.simplednn.core.functionalities.activations.Tanh
 import com.kotlinnlp.simplednn.core.layers.LayerInterface
 import com.kotlinnlp.simplednn.core.layers.LayerType
 import com.kotlinnlp.simplednn.core.neuralnetwork.NeuralNetwork
 import com.kotlinnlp.simplednn.simplemath.ndarray.Shape
+import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArrayFactory
 import com.kotlinnlp.utils.DictionarySet
 import java.io.Serializable
@@ -43,8 +46,11 @@ class DeprelLabelerModel(
     LayerInterface(sizes = List(2) { this.contextEncodingSize } ),
     LayerInterface(
       size = 2 * this.contextEncodingSize,
-      connectionType = LayerType.Connection.Concat,
-      dropout = 0.15),
+      connectionType = LayerType.Connection.Concat),
+    LayerInterface(
+      size = 100,
+      connectionType = LayerType.Connection.Feedforward,
+      activationFunction = Tanh()),
     LayerInterface(
       type = LayerType.Input.Dense,
       size = this.deprels.size,
@@ -55,4 +61,29 @@ class DeprelLabelerModel(
         LossCriterionType.HingeLoss -> null
       })
   )
+
+  /**
+   * Return the errors of a given labeler predictions, respect to a gold dependency tree.
+   * Errors are calculated comparing the last predictions done with the given gold deprels.
+   *
+   * @param predictions the labeler predictions
+   * @param goldDeprels the list of gold deprels
+   *
+   * @return a list of predictions errors
+   */
+  fun calculateLoss(predictions: List<DeprelLabeler.Prediction>, goldDeprels: Array<Deprel?>): List<DenseNDArray> {
+
+    val errorsList = mutableListOf<DenseNDArray>()
+
+    predictions.forEachIndexed { tokenId, prediction ->
+
+      val goldDeprel: Deprel = goldDeprels[tokenId]!!
+      val goldDeprelIndex: Int = this.deprels.getId(goldDeprel)!!
+
+      errorsList.add(LossCriterion(this.lossCriterionType).getPredictionErrors(
+        prediction = prediction.deprels, goldIndex = goldDeprelIndex))
+    }
+
+    return errorsList
+  }
 }

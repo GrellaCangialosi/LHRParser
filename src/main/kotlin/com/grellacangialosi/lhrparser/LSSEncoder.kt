@@ -7,8 +7,8 @@
 
 package com.grellacangialosi.lhrparser
 
-import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoder
-import com.grellacangialosi.lhrparser.encoders.headsencoder.HeadsEncoder
+import com.grellacangialosi.lhrparser.neuralmodels.contextencoder.ContextEncoder
+import com.grellacangialosi.lhrparser.neuralmodels.headsencoder.HeadsEncoder
 import com.kotlinnlp.neuralparser.language.Token
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 import com.kotlinnlp.tokensencoder.TokensEncoder
@@ -36,8 +36,8 @@ class LSSEncoder(
   fun encode(tokens: List<Token>): LatentSyntacticStructure {
 
     val tokensEncodings: List<DenseNDArray> = this.tokensEncoder.encode(tokens)
-    val contextVectors: List<DenseNDArray> = this.contextEncoder.encode(tokensEncodings)
-    val latentHeads: List<DenseNDArray> = this.headsEncoder.encode(contextVectors)
+    val contextVectors: List<DenseNDArray> = this.contextEncoder.forward(tokensEncodings)
+    val latentHeads: List<DenseNDArray> = this.headsEncoder.forward(contextVectors)
 
     return LatentSyntacticStructure(
       tokens = tokens,

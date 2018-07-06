@@ -7,9 +7,9 @@
 
 package com.grellacangialosi.lhrparser
 
-import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoder
-import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderBuilder
-import com.grellacangialosi.lhrparser.encoders.contextencoder.ContextEncoderOptimizer
+import com.grellacangialosi.lhrparser.neuralmodels.contextencoder.ContextEncoder
+import com.grellacangialosi.lhrparser.neuralmodels.contextencoder.ContextEncoderBuilder
+import com.grellacangialosi.lhrparser.neuralmodels.contextencoder.ContextEncoderOptimizer
 import com.kotlinnlp.neuralparser.helpers.Trainer
 import com.kotlinnlp.neuralparser.helpers.Validator
 import com.kotlinnlp.neuralparser.language.Sentence
@@ -98,12 +98,12 @@ class LHRTransferLearning(
     val targetTokensEncoder: TokensEncoder = this.targetTokensEncoderBuilder.invoke()
     val targetContextEncoder: ContextEncoder = this.targetContextEncoderBuilder.invoke()
     val targetTokensEncodings: List<DenseNDArray> = targetTokensEncoder.encode(sentence.tokens)
-    val targetContextVectors = targetContextEncoder.encode(targetTokensEncodings)
+    val targetContextVectors = targetContextEncoder.forward(targetTokensEncodings)
 
     val refTokensEncoder: TokensEncoder = this.referenceTokensEncoderBuilder.invoke()
     val refContextEncoder: ContextEncoder = this.referenceContextEncoderBuilder.invoke()
     val refTokensEncodings: List<DenseNDArray> = refTokensEncoder.encode(sentence.tokens)
-    val refContextVectors = refContextEncoder.encode(refTokensEncodings)
+    val refContextVectors = refContextEncoder.forward(refTokensEncodings)
 
     val errors: List<DenseNDArray> = MSECalculator().calculateErrors(
       outputSequence = targetContextVectors,

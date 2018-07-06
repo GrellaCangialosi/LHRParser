@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.labeler
+package com.grellacangialosi.lhrparser.neuralmodels.labeler
 
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
 import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
@@ -19,7 +19,7 @@ import com.kotlinnlp.simplednn.core.optimizer.ParamsOptimizer
 class DeprelLabelerOptimizer(
   private val model: DeprelLabelerModel,
   updateMethod: UpdateMethod<*>
-) : Optimizer(
+) : Optimizer<DeprelLabelerParams>(
   updateMethod = updateMethod
 ) {
 
@@ -43,7 +43,7 @@ class DeprelLabelerOptimizer(
    * @param copy a Boolean indicating if the [paramsErrors] can be used as reference or must be copied. Set copy = false
    *             to optimize the accumulation when the amount of the errors to accumulate is 1. (default = true)
    */
-  fun accumulate(paramsErrors: DeprelLabelerParams, copy: Boolean = true) {
+  override fun accumulate(paramsErrors: DeprelLabelerParams, copy: Boolean) {
     this.optimizer.accumulate(paramsErrors = paramsErrors.params, copy = copy)
   }
 }
