@@ -33,12 +33,15 @@ class DeprelLabeler(private val model: DeprelLabelerModel) : NeuralModel<
    * @param lss the latent syntactic structure
    * @param dependencyTree the dependency tree
    */
-  class Input (val lss: LatentSyntacticStructure, val dependencyTree: DependencyTree)
+  class Input(val lss: LatentSyntacticStructure, val dependencyTree: DependencyTree)
 
   /**
    * The input errors of this labeler.
+   *
+   * @param rootErrors the errors of the virtual root
+   * @param contextErrors the errors of the context vectors
    */
-  class InputErrors (
+  class InputErrors(
     val rootErrors: DenseNDArray,
     val contextErrors: List<DenseNDArray>)
 
@@ -70,9 +73,7 @@ class DeprelLabeler(private val model: DeprelLabelerModel) : NeuralModel<
 
     this.dependencyTree = input.dependencyTree
 
-    val features = FeaturesExtractor(input.lss, input.dependencyTree, this.model.paddingVector).extract()
-
-    val outputList: List<DenseNDArray> = this.processor.forward(ArrayList(features))
+    val outputList: List<DenseNDArray> = this.processor.forward(ArrayList(this.extractFeatures(input)))
 
     return outputList.map { Prediction(deprels = it) }
   }
@@ -128,4 +129,22 @@ class DeprelLabeler(private val model: DeprelLabelerModel) : NeuralModel<
    * @return the [Deprel] corrisponding to the given [index]
    */
   fun getDeprel(index: Int) = this.model.deprels.getElement(index)!!
+
+  /**
+   * @return a list of features
+   */
+  private fun extractFeatures(input: Input): List<List<DenseNDArray>> {
+
+    val features = mutableListOf<List<DenseNDArray>>()
+
+    input.lss.tokens.map { it.id }.zip(this.dependencyTree.heads).forEach { (dependentId, headId) ->
+
+      features.add(listOf(
+        input.lss.contextVectors[dependentId],
+        headId?.let { input.lss.contextVectors[it] } ?: input.lss.virtualRoot
+      ))
+    }
+
+    return features
+  }
 }
