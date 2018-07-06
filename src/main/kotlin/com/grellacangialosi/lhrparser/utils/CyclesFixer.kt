@@ -29,26 +29,18 @@ class CyclesFixer(private val dependencyTree: DependencyTree, private val arcSco
 
     val cycles: List<DependencyTree.Path> = this.dependencyTree.getCycles()
 
-    this.setDirectElements(cycles)
+    this.directElements = this.dependencyTree.elements.toSet() - cycles.toElementsSet()
 
     cycles.forEach { this.fixCycle(it) }
   }
 
   /**
-   * Set the [directElements].
+   * @return the set of elements from a list of path
    */
-  private fun setDirectElements(cycles: List<DependencyTree.Path>) {
-
-    this.directElements = this.dependencyTree.elements.toSet() - this.getElementsSet(cycles)
-  }
-
-  /**
-   * @return the set of elements involved in cycles
-   */
-  private fun getElementsSet(cycles: List<DependencyTree.Path>): Set<Int> {
+  private fun List<DependencyTree.Path>.toElementsSet(): Set<Int> {
 
     val elements = mutableSetOf<Int>()
-    cycles.forEach { path -> elements.addAll(path.arcs.map { it.dependent }) }
+    this.forEach { path -> elements += path.arcs.map { it.dependent } }
     return elements
   }
 
