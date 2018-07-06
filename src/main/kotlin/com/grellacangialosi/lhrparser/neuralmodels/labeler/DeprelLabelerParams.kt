@@ -8,8 +8,15 @@
 package com.grellacangialosi.lhrparser.neuralmodels.labeler
 
 import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
+import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
 
 /**
- * @property params the parameters of the [DeprelLabeler]
+ * The parameters of the [DeprelLabeler].
+ *
+ * @property params the parameters of the deprel classifier
+ * @property distanceEmbeddings the list pair of id and value of a distance embedding
  */
-class DeprelLabelerParams(val params: NetworkParameters)
+data class DeprelLabelerParams(
+  val params: NetworkParameters,
+  val distanceEmbeddings: List<Pair<Int, DenseNDArray>>
+)

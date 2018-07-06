@@ -7,8 +7,8 @@
 
 package com.grellacangialosi.lhrparser.neuralmodels.labeler
 
+import com.kotlinnlp.simplednn.core.embeddings.EmbeddingsOptimizer
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
-import com.kotlinnlp.simplednn.core.neuralnetwork.NetworkParameters
 import com.kotlinnlp.simplednn.core.optimizer.Optimizer
 import com.kotlinnlp.simplednn.core.optimizer.ParamsOptimizer
 
@@ -26,14 +26,19 @@ class DeprelLabelerOptimizer(
   /**
    * The optimizer of the network
    */
-  private val optimizer: ParamsOptimizer<NetworkParameters> =
-    ParamsOptimizer(params = this.model.networkModel.model, updateMethod = this.updateMethod)
+  private val optimizer = ParamsOptimizer(this.model.networkModel.model, this.updateMethod)
+
+  /**
+   * The optimizer of the distance embeddings
+   */
+  private val distanceEmbeddingsOptimizer = EmbeddingsOptimizer(this.model.distanceEmbeddings, this.updateMethod)
 
   /**
    * Update the parameters of the neural element associated to this optimizer.
    */
   override fun update() {
     this.optimizer.update()
+    this.distanceEmbeddingsOptimizer.update()
   }
 
   /**
@@ -44,6 +49,11 @@ class DeprelLabelerOptimizer(
    *             to optimize the accumulation when the amount of the errors to accumulate is 1. (default = true)
    */
   override fun accumulate(paramsErrors: DeprelLabelerParams, copy: Boolean) {
+
     this.optimizer.accumulate(paramsErrors = paramsErrors.params, copy = copy)
+
+    paramsErrors.distanceEmbeddings.forEach {
+      this.distanceEmbeddingsOptimizer.accumulate(embeddingKey = it.first, errors = it.second)
+    }
   }
 }
