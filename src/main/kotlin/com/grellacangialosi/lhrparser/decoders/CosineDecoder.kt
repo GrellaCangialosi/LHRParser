@@ -7,6 +7,7 @@
 
 package com.grellacangialosi.lhrparser.decoders
 
+import com.grellacangialosi.lhrparser.HeadsDecoder
 import com.grellacangialosi.lhrparser.LatentSyntacticStructure
 import com.grellacangialosi.lhrparser.utils.ArcScores
 import com.grellacangialosi.lhrparser.utils.ArcScores.Companion.rootId
@@ -16,7 +17,7 @@ import com.kotlinnlp.simplednn.simplemath.cosineSimilarity
 /**
  * The HeadsDecoder.
  */
-class HeadsDecoder : LSSDecoder {
+class CosineDecoder : HeadsDecoder {
 
   /**
    * The private map of scored arcs.

@@ -5,15 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * -----------------------------------------------------------------------------*/
 
-package com.grellacangialosi.lhrparser.decoders
+package com.grellacangialosi.lhrparser
 
-import com.grellacangialosi.lhrparser.LatentSyntacticStructure
 import com.grellacangialosi.lhrparser.utils.ArcScores
 
 /**
  * The interface for a latent syntactic structure decoder.
  */
-interface LSSDecoder {
+interface HeadsDecoder {
 
   /**
    * Calculate the arc-scores.
