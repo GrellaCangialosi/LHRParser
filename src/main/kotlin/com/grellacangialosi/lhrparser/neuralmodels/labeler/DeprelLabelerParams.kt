@@ -14,9 +14,5 @@ import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
  * The parameters of the [DeprelLabeler].
  *
  * @property params the parameters of the deprel classifier
- * @property distanceEmbeddings the list pair of id and value of a distance embedding
  */
-data class DeprelLabelerParams(
-  val params: NetworkParameters,
-  val distanceEmbeddings: List<Pair<Int, DenseNDArray>>
-)
+data class DeprelLabelerParams(val params: NetworkParameters)

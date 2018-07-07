@@ -31,32 +31,18 @@ import java.io.Serializable
  */
 class DeprelLabelerModel(
   val contextEncodingSize: Int,
-  val distanceEmbeddingSize: Int = 5,
   val deprels: DictionarySet<Deprel>,
   val lossCriterionType: LossCriterionType
 ) : Serializable {
 
   /**
-   * The padding vector that represents a null token.
-   */
-  val paddingVector = DenseNDArrayFactory.zeros(Shape(this.contextEncodingSize))
-
-  /**
-   * The map of the embeddings indicating the distance between a dependent and a governor.
-   */
-  val distanceEmbeddings = EmbeddingsMap<Int>(size = this.distanceEmbeddingSize)
-
-  /**
    * The Network model that predicts the Deprels
    */
   val networkModel: NeuralNetwork = NeuralNetwork(
-    LayerInterface(sizes = listOf(this.contextEncodingSize, this.contextEncodingSize, this.distanceEmbeddingSize)),
+    LayerInterface(sizes = listOf(this.contextEncodingSize, this.contextEncodingSize)),
     LayerInterface(
-      size = (2 * this.contextEncodingSize) + this.distanceEmbeddingSize,
-      connectionType = LayerType.Connection.Concat),
-    LayerInterface(
-      size = 100,
-      connectionType = LayerType.Connection.Feedforward,
+      size = this.contextEncodingSize,
+      connectionType = LayerType.Connection.Affine,
       activationFunction = Tanh()),
     LayerInterface(
       type = LayerType.Input.Dense,
@@ -68,12 +54,6 @@ class DeprelLabelerModel(
         LossCriterionType.HingeLoss -> null
       })
   )
-
-  init {
-    listOf(0, -1, -2, -3, -4, -5, -6, -10, 1, 2, 3, 4, 5, 6, 10).forEach { distance ->
-      this.distanceEmbeddings.set(key = distance)
-    }
-  }
 
   /**
    * Return the errors of a given labeler predictions, respect to a gold dependency tree.

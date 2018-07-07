@@ -29,16 +29,10 @@ class DeprelLabelerOptimizer(
   private val optimizer = ParamsOptimizer(this.model.networkModel.model, this.updateMethod)
 
   /**
-   * The optimizer of the distance embeddings
-   */
-  private val distanceEmbeddingsOptimizer = EmbeddingsOptimizer(this.model.distanceEmbeddings, this.updateMethod)
-
-  /**
    * Update the parameters of the neural element associated to this optimizer.
    */
   override fun update() {
     this.optimizer.update()
-    this.distanceEmbeddingsOptimizer.update()
   }
 
   /**
@@ -51,9 +45,5 @@ class DeprelLabelerOptimizer(
   override fun accumulate(paramsErrors: DeprelLabelerParams, copy: Boolean) {
 
     this.optimizer.accumulate(paramsErrors = paramsErrors.params, copy = copy)
-
-    paramsErrors.distanceEmbeddings.forEach {
-      this.distanceEmbeddingsOptimizer.accumulate(embeddingKey = it.first, errors = it.second)
-    }
   }
 }

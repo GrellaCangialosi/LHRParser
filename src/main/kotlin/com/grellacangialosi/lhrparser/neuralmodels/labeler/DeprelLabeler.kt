@@ -102,7 +102,7 @@ class DeprelLabeler(private val model: DeprelLabelerModel) : NeuralModel<
 
     val rootErrors: DenseNDArray = DenseNDArrayFactory.zeros(Shape(this.model.contextEncodingSize))
 
-    inputErrors.forEachIndexed { tokenId, (depErrors, govErrors, _) ->
+    inputErrors.forEachIndexed { tokenId, (depErrors, govErrors) ->
 
       val depVector: DenseNDArray = contextErrors[tokenId]
       val govVector: DenseNDArray = this.dependencyTree.heads[tokenId].let {
@@ -121,22 +121,7 @@ class DeprelLabeler(private val model: DeprelLabelerModel) : NeuralModel<
    *
    * @return the errors of the [DeprelLabeler] parameters
    */
-  override fun getParamsErrors(copy: Boolean): DeprelLabelerParams {
-
-    val inputErrors: List<List<DenseNDArray>> = this.processor.getInputsErrors(copy = false)
-
-    val distanceErrorsList = mutableListOf<Pair<Int, DenseNDArray>>()
-
-    inputErrors.forEachIndexed { tokenId, (_, _, distanceErrors) ->
-
-      val distance = this.distance(dependentId = tokenId, governorId = this.dependencyTree.heads[tokenId])
-      distanceErrorsList.add(Pair(distance, distanceErrors))
-    }
-
-    return DeprelLabelerParams(
-      params = this.processor.getParamsErrors(copy = copy),
-      distanceEmbeddings = distanceErrorsList)
-  }
+  override fun getParamsErrors(copy: Boolean) = DeprelLabelerParams(this.processor.getParamsErrors(copy = copy))
 
   /**
    * @param index a prediction index
@@ -156,32 +141,10 @@ class DeprelLabeler(private val model: DeprelLabelerModel) : NeuralModel<
 
       features.add(listOf(
         input.lss.contextVectors[dependentId],
-        headId?.let { input.lss.contextVectors[it] } ?: input.lss.virtualRoot,
-        this.model.distanceEmbeddings.get(this.distance(dependentId = dependentId, governorId = headId)).array.values
+        headId?.let { input.lss.contextVectors[it] } ?: input.lss.virtualRoot
       ))
     }
 
     return features
-  }
-
-  /**
-   * @param dependentId the dependent id
-   * @param governorId the governor id
-   *
-   * @return a limited distance
-   */
-  private fun distance(dependentId: Int, governorId: Int?): Int {
-
-    if (governorId == null) return 0
-
-    val absDistance = abs(governorId - dependentId)
-
-    val limitDistance: Int = when {
-      absDistance < 6 -> absDistance
-      absDistance < 10 -> 6
-      else -> 10
-    }
-
-    return if (dependentId < governorId) -limitDistance else limitDistance
   }
 }
