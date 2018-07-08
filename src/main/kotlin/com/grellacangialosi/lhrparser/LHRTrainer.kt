@@ -16,6 +16,7 @@ import com.grellacangialosi.lhrparser.neuralmodels.headsencoder.HeadsEncoderOpti
 import com.grellacangialosi.lhrparser.neuralmodels.labeler.DeprelLabeler
 import com.grellacangialosi.lhrparser.neuralmodels.labeler.DeprelLabelerBuilder
 import com.grellacangialosi.lhrparser.neuralmodels.labeler.DeprelLabelerOptimizer
+import com.grellacangialosi.lhrparser.neuralmodels.positionalencoder.PositionalEncoder
 import com.grellacangialosi.lhrparser.neuralmodels.propagateErrors
 import com.kotlinnlp.dependencytree.DependencyTree
 import com.kotlinnlp.neuralparser.helpers.Trainer
@@ -24,6 +25,8 @@ import com.kotlinnlp.neuralparser.language.Sentence
 import com.kotlinnlp.simplednn.core.functionalities.losses.MSECalculator
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.UpdateMethod
 import com.kotlinnlp.simplednn.core.functionalities.updatemethods.adam.ADAMMethod
+import com.kotlinnlp.simplednn.core.optimizer.ParamsOptimizer
+import com.kotlinnlp.simplednn.deeplearning.attention.pointernetwork.PointerNetworkProcessor
 import com.kotlinnlp.simplednn.simplemath.assignSum
 import com.kotlinnlp.simplednn.simplemath.ndarray.Shape
 import com.kotlinnlp.simplednn.simplemath.ndarray.dense.DenseNDArray
@@ -123,6 +126,17 @@ class LHRTrainer(
     model = this.parser.model.tokensEncoderModel, updateMethod = this.updateMethod)
 
   /**
+   * The positional encoder.
+   */
+  private val positionalEncoder = PositionalEncoder(this.parser.model.pointerNetworkModel)
+
+  /**
+   * The pointer network optimizer.
+   */
+  private val pointerNetworkOptimizer = ParamsOptimizer(
+    params = this.parser.model.pointerNetworkModel.params, updateMethod = this.updateMethod)
+
+  /**
    * The epoch counter.
    */
   var epochCount: Int = 0
@@ -134,7 +148,8 @@ class LHRTrainer(
     this.headsEncoderOptimizer,
     this.contextEncoderOptimizer,
     this.deprelLabelerOptimizer,
-    this.tokensEncoderOptimizer)
+    this.tokensEncoderOptimizer,
+    this.pointerNetworkOptimizer)
 
   /**
    * @return a string representation of the configuration of this Trainer
@@ -223,9 +238,14 @@ class LHRTrainer(
       this.parser.model.labelerModel?.calculateLoss(labelerPrediction, goldTree.deprels)
     }
 
+    val positionalEncoderErrors: PointerNetworkProcessor.InputErrors = with(this.positionalEncoder) {
+      propagateErrors(calculateErrors(forward(lss.contextVectors)), this@LHRTrainer.pointerNetworkOptimizer)
+    }
+
     this.propagateErrors(
       latentHeadsErrors = latentHeadsErrors,
       labelerErrors = labelerErrors,
+      positionalEncoderErrors = positionalEncoderErrors,
       encoder = encoder,
       labeler = labeler)
 
@@ -283,6 +303,7 @@ class LHRTrainer(
   private fun propagateErrors(
     latentHeadsErrors: List<DenseNDArray>,
     labelerErrors: List<DenseNDArray>?,
+    positionalEncoderErrors: PointerNetworkProcessor.InputErrors,
     encoder: LSSEncoder,
     labeler: DeprelLabeler?){
 
@@ -294,14 +315,19 @@ class LHRTrainer(
       DenseNDArrayFactory.zeros(Shape(this.parser.model.tokensEncoderModel.tokenEncodingSize))
     } )
 
-    contextErrors.assignSum(encoder.headsEncoder.propagateErrors(latentHeadsErrors, this.headsEncoderOptimizer))
+    val headsEncoderInputErrors = encoder.headsEncoder.propagateErrors(latentHeadsErrors, this.headsEncoderOptimizer)
+
+    contextErrors.assignSum(positionalEncoderErrors.inputVectorsErrors)
+    contextErrors.assignSum(headsEncoderInputErrors)
 
     labeler?.propagateErrors(labelerErrors!!, this.deprelLabelerOptimizer!!)?.let { labelerInputErrors ->
       contextErrors.assignSum(labelerInputErrors.contextErrors)
       this.propagateRootErrors(labelerInputErrors.rootErrors)
     }
 
-    tokensErrors.assignSum(encoder.contextEncoder.propagateErrors(contextErrors, this.contextEncoderOptimizer))
+    val contextEncoderInputErrors = encoder.contextEncoder.propagateErrors(contextErrors, this.contextEncoderOptimizer)
+
+    tokensErrors.assignSum(contextEncoderInputErrors)
 
     encoder.tokensEncoder.propagateErrors(tokensErrors, this.tokensEncoderOptimizer)
   }
