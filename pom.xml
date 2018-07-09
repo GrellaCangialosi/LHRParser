@@ -65,7 +65,7 @@
         <dependencytree.version>0.3.1</dependencytree.version>
         <neuralparser.version>0.3.2</neuralparser.version>
         <linguisticdescription.version>0.8.0</linguisticdescription.version>
-        <tokensencoder.version>0.2.2</tokensencoder.version>
+        <tokensencoder.version>0.2.1</tokensencoder.version>
         <utils.version>2.1.0</utils.version>
     </properties>
 
